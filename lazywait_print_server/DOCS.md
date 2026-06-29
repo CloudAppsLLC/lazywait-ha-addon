@@ -6,11 +6,12 @@ branch to the LazyWait cloud. Installing this add-on also installs the
 
 ## Configuration
 
+You do **not** enter any Supabase keys. The device receives the project URL and
+the public anon key automatically when you pair it (via the dashboard pairing
+code) — nothing sensitive is stored in the add-on options.
+
 | Option | Required | Description |
 |--------|----------|-------------|
-| `SUPABASE_URL` | yes | Your LazyWait Supabase project URL. |
-| `SUPABASE_ANON_KEY` | yes | Supabase anon key (used for Realtime). |
-| `SUPABASE_SERVICE_ROLE_KEY` | yes | Supabase service-role key (backend use on the device). |
 | `LAN_IP` | no | The branch device's LAN IP (e.g. `192.168.100.150`). Auto-detected if blank. |
 | `LAZYWAIT_API_BASE` | no | Cloud API base. Defaults to `https://apiv2.lazywait.com/v1`. |
 | `PORT` | no | Listen port (default 80). |

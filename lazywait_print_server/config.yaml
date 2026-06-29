@@ -35,16 +35,14 @@ options:
   TZ: "Asia/Riyadh"
   PORT: 80
   LAN_IP: ""
-  SUPABASE_URL: ""
-  SUPABASE_ANON_KEY: ""
-  SUPABASE_SERVICE_ROLE_KEY: ""
   LAZYWAIT_API_BASE: "https://apiv2.lazywait.com/v1"
 
+# No Supabase keys here, by design. The device gets the project URL + the PUBLIC
+# anon key from the cloud during PAIRING (enter the dashboard pairing code), so
+# you paste nothing and no key sits in the add-on options. The service-role key
+# is never placed on the device.
 schema:
   TZ: str
   PORT: int
   LAN_IP: str?
-  SUPABASE_URL: str?
-  SUPABASE_ANON_KEY: str?
-  SUPABASE_SERVICE_ROLE_KEY: str?
   LAZYWAIT_API_BASE: str?
