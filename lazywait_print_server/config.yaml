@@ -25,6 +25,12 @@ init: true
 host_network: true
 ports: {}
 
+# Show an "OPEN WEB UI" button on the add-on's Info tab that points at the
+# print server on this box. [HOST] resolves to the Home Assistant host's IP, so
+# the tech sees (and can click to) the exact address POS devices should send
+# print jobs to — no digging through the Log for the IP.
+webui: "http://[HOST]:80/"
+
 # Grant read/write to the Home Assistant config directory so the add-on installs
 # the bundled `lazywait` custom component into /homeassistant/custom_components/
 # on start (the image's run.sh does this). Installing the add-on then makes the
