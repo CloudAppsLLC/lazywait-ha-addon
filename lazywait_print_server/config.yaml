@@ -1,5 +1,5 @@
 name: LazyWait Print Server
-version: "1.0.3"
+version: "1.0.4"
 slug: lazywait_print_server
 description: LazyWait Print Server — local printing + Home Assistant integration for a LazyWait branch
 url: "https://github.com/CloudAppsLLC/lazywait-ha-addon"
@@ -27,11 +27,10 @@ init: false
 host_network: true
 ports: {}
 
-# Show an "OPEN WEB UI" button on the add-on's Info tab that points at the
-# print server on this box. [HOST] resolves to the Home Assistant host's IP, so
-# the tech sees (and can click to) the exact address POS devices should send
-# print jobs to — no digging through the Log for the IP.
-webui: "http://[HOST]:80/"
+# (No `webui:` — with host_network + empty ports map, newer Supervisor rejects a
+# webui port reference and HIDES the whole add-on from the store. The device IP
+# is surfaced in the add-on Log instead via a clear boot banner. A validated
+# webui can be re-added later by mapping the port in `ports:`.)
 
 # Grant read/write to the Home Assistant config directory so the add-on installs
 # the bundled `lazywait` custom component into /homeassistant/custom_components/
