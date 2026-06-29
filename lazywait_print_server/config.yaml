@@ -1,5 +1,5 @@
 name: LazyWait Print Server
-version: "1.0.4"
+version: "1.0.5"
 slug: lazywait_print_server
 description: LazyWait Print Server — local printing + Home Assistant integration for a LazyWait branch
 url: "https://github.com/CloudAppsLLC/lazywait-ha-addon"
@@ -36,7 +36,12 @@ ports: {}
 # the bundled `lazywait` custom component into /homeassistant/custom_components/
 # on start (the image's run.sh does this). Installing the add-on then makes the
 # LazyWait integration available under Settings -> Devices & Services.
-homeassistant_config: rw
+# Grant the HA config dir (mounted at /homeassistant) so the add-on installs the
+# bundled `lazywait` integration into custom_components/. The map: list form is
+# the widely-supported grant; the bare `homeassistant_config: rw` shorthand was
+# not honored on the user's Supervisor (left /homeassistant unmounted).
+map:
+  - homeassistant_config:rw
 
 options:
   TZ: "Asia/Riyadh"
