@@ -1,0 +1,50 @@
+name: LazyWait Print Server
+version: "1.0.0"
+slug: lazywait_print_server
+description: LazyWait Print Server — local printing + Home Assistant integration for a LazyWait branch
+url: "https://github.com/CloudAppsLLC/lazywait-ha-addon"
+
+# Pull a PREBUILT image from GHCR instead of building on the device. HA
+# substitutes {arch} with the host architecture (aarch64 / armv7 / amd64), so
+# each box pulls the matching image. The images are built from LazyWait's
+# private source by CI and published as PUBLIC GHCR packages — the source stays
+# private, the install is one click in the UI (no on-device build, no terminal).
+image: "ghcr.io/cloudappsllc/lazywait-print-server-{arch}"
+
+arch:
+  - aarch64
+  - armv7
+  - amd64
+
+startup: services
+boot: auto
+init: true
+
+# Run on the host network so the print server can reach LAN printers directly
+# and be reached by POS devices on the branch network.
+host_network: true
+ports: {}
+
+# Grant read/write to the Home Assistant config directory so the add-on installs
+# the bundled `lazywait` custom component into /homeassistant/custom_components/
+# on start (the image's run.sh does this). Installing the add-on then makes the
+# LazyWait integration available under Settings -> Devices & Services.
+homeassistant_config: rw
+
+options:
+  TZ: "Asia/Riyadh"
+  PORT: 80
+  LAN_IP: ""
+  SUPABASE_URL: ""
+  SUPABASE_ANON_KEY: ""
+  SUPABASE_SERVICE_ROLE_KEY: ""
+  LAZYWAIT_API_BASE: "https://apiv2.lazywait.com/v1"
+
+schema:
+  TZ: str
+  PORT: int
+  LAN_IP: str?
+  SUPABASE_URL: str?
+  SUPABASE_ANON_KEY: str?
+  SUPABASE_SERVICE_ROLE_KEY: str?
+  LAZYWAIT_API_BASE: str?
