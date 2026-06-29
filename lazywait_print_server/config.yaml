@@ -1,5 +1,5 @@
 name: LazyWait Print Server
-version: "1.0.2"
+version: "1.0.3"
 slug: lazywait_print_server
 description: LazyWait Print Server — local printing + Home Assistant integration for a LazyWait branch
 url: "https://github.com/CloudAppsLLC/lazywait-ha-addon"
@@ -18,7 +18,9 @@ arch:
 
 startup: services
 boot: auto
-init: true
+# MUST be false for HA s6-overlay base images. init: true makes the Supervisor
+# reject the add-on (hiding it from the store) and conflicts with s6 as PID 1.
+init: false
 
 # Run on the host network so the print server can reach LAN printers directly
 # and be reached by POS devices on the branch network.
