@@ -1,5 +1,5 @@
 name: LazyWait Print Server
-version: "26.6.5"
+version: "26.6.6"
 slug: lazywait_print_server
 description: LazyWait Print Server — local printing + Home Assistant integration for a LazyWait branch
 url: "https://github.com/CloudAppsLLC/lazywait-ha-addon"
@@ -42,6 +42,11 @@ ports: {}
 # not honored on the user's Supervisor (left /homeassistant unmounted).
 map:
   - homeassistant_config:rw
+
+# Supervisor + HA Core API access so run.sh can auto-restart HA Core after
+# installing a NEW bundled integration version (no manual restart needed).
+hassio_api: true
+homeassistant_api: true
 
 options:
   TZ: "Asia/Riyadh"
