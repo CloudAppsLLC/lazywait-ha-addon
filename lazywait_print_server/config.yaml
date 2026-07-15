@@ -1,5 +1,5 @@
 name: LazyWait Print Server
-version: "26.7.25"
+version: "26.7.26"
 slug: lazywait_print_server
 description: LazyWait Print Server — local printing + Home Assistant integration for a LazyWait branch
 url: "https://github.com/CloudAppsLLC/lazywait-ha-addon"
