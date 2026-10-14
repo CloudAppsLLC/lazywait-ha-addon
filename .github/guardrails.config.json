@@ -1,0 +1,13 @@
+{
+  "repo": "lazywait-ha-addon",
+  "sourceDirs": [
+    "lazywait_print_server"
+  ],
+  "migrationsDir": null,
+  "isFrontend": false,
+  "tsOnly": false,
+  "pollHardFloorMs": 5000,
+  "pollWarnFloorMs": 60000,
+  "ignore": [],
+  "baseline": {}
+}

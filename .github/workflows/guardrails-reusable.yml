@@ -1,0 +1,223 @@
+name: guardrails-reusable
+
+# The one copy of the guardrail gate. All ten LazyWait repos call this via
+# `uses: CloudAppsLLC/LazyWaitInternalAPI/.github/workflows/guardrails-reusable.yml@main`
+# so the rules cannot drift into ten slightly-different versions.
+#
+# Requires, once, at the organisation level:
+#   CloudAppsLLC/LazyWaitInternalAPI → Settings → Actions → General →
+#   "Access" → Accessible from repositories in the CloudAppsLLC organization.
+# Without it every caller fails with "workflow was not found".
+#
+# WHAT IT ENFORCES  (detail lives in .github/scripts/guardrails.mjs)
+#   cost        no new Realtime subscription, publication member, or sub-60s poll
+#   security    no hardcoded service_role JWT, no service_role in a frontend,
+#               no tracked .env, no migration that turns RLS off
+#   perf        no select('*') without a ceiling
+#   quality     no new .js/.jsx in a TypeScript tree
+#   secrets     gitleaks over the PR range
+#   supply      frozen-lockfile install, build, high-severity audit
+#
+# TWO JOBS, not one per concern: `patterns` (the scanner + gitleaks, seconds of
+# work) and `build`. Every job bills at least a whole minute and pays its own
+# checkout, so a tiny check gets a step, not a job. `build` stays separate so a
+# red typecheck can never hide a patterns/secrets finding behind one red cross.
+#
+# THE SCANNER AND ITS BASELINE ARE READ FROM THE BASE BRANCH, not from the PR.
+# A pull request therefore cannot weaken its own gate. The consequence is
+# deliberate: a legitimately-needed baseline change is its own PR, reviewed by a
+# code owner, and only takes effect once merged.
+
+on:
+  workflow_call:
+    inputs:
+      node_version:
+        description: Node version for the scanner and the build.
+        type: string
+        default: '20'
+      package_manager:
+        description: yarn | npm | none
+        type: string
+        default: yarn
+      install_dir:
+        description: Directory holding the lockfile and package.json.
+        type: string
+        default: '.'
+      build_cmd:
+        description: Build command, run in install_dir. Empty skips the build.
+        type: string
+        default: ''
+      audit:
+        description: Run a high-severity dependency audit.
+        type: boolean
+        default: true
+      audit_blocking:
+        description: Fail the job on a high-severity advisory.
+        type: boolean
+        default: true
+      secret_scan:
+        description: Run gitleaks.
+        type: boolean
+        default: true
+    secrets:
+      GITLEAKS_LICENSE:
+        description: Required by gitleaks-action for organisation-owned repos.
+        required: false
+      # Read access to private git dependencies (github:CloudAppsLLC/LazyWaitUtil).
+      # Without one the build job cannot `yarn install` a repo that depends on
+      # it and fails with "could not read Username". LAZYWAITUTIL_TOKEN wins;
+      # GH_PAT is accepted because LazyWaitERP's deploy already uses that name.
+      # Least privilege: a fine-grained PAT with Contents:read on LazyWaitUtil only.
+      LAZYWAITUTIL_TOKEN:
+        required: false
+      GH_PAT:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  patterns:
+    name: patterns
+    runs-on: ubuntu-latest
+    env:
+      # Read once at job level so the two gitleaks steps can branch on its presence.
+      GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+
+      # On a pull request the checkout is GitHub's merge commit, whose FIRST
+      # PARENT is the base branch as it is now. pull_request.base.sha stays at
+      # the fork point when the base moves on, so against it every file added
+      # to the base since then reads as added by this PR. Empty off a PR.
+      - name: Resolve the base
+        id: base
+        env:
+          EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          sha="${EVENT_BASE_SHA:-}"
+          if [ -n "$sha" ] && git rev-parse -q --verify 'HEAD^2' >/dev/null; then
+            sha="$(git rev-parse 'HEAD^1')"
+          fi
+          echo "base: ${sha:-none} (event base.sha: ${EVENT_BASE_SHA:-none})"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - name: Pin the scanner to the base branch
+        id: pin
+        env:
+          BASE_SHA: ${{ steps.base.outputs.sha }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BASE_SHA:-}" ]; then
+            echo "::notice::No pull_request base SHA; scanning the checked-out tree as-is."
+            exit 0
+          fi
+          pinned=0
+          for f in .github/scripts/guardrails.mjs .github/guardrails.config.json; do
+            if git cat-file -e "$BASE_SHA:$f" 2>/dev/null; then
+              git show "$BASE_SHA:$f" > "$f"
+              pinned=$((pinned+1))
+            else
+              echo "::warning::$f does not exist on the base branch yet — using the copy from this PR. This is expected only on the PR that introduces the guardrails."
+            fi
+          done
+          echo "pinned $pinned file(s) from $BASE_SHA"
+
+      - name: Run guardrails
+        env:
+          GUARDRAILS_BASE_SHA: ${{ steps.base.outputs.sha }}
+        run: node .github/scripts/guardrails.mjs
+
+      # The secret scan used to be its own `secrets` job. Each job bills at least
+      # a whole minute and repeats the full-history checkout (~35s on the ERP),
+      # to do ~1s of gitleaks — so it rides here, on the checkout above.
+      # `!cancelled()` keeps it independent: a guardrails finding above does not
+      # skip the scan, and either one failing fails `checks / patterns`.
+      #
+      # gitleaks-action requires a licence for organisation-owned repos. When the
+      # secret is present we use the action; when it is not we run the same
+      # scanner from its official binary, so the gate works either way rather
+      # than silently degrading to "no secret scanning at all".
+      - name: gitleaks (action)
+        if: ${{ !cancelled() && inputs.secret_scan && env.GITLEAKS_LICENSE != '' }}
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+      # The range is this PR's own commits: from the merge commit's first parent
+      # (the base branch now, resolved above), not from pull_request.base.sha,
+      # which stays at the fork point and would re-scan every commit merged into
+      # the base since.
+      - name: gitleaks (binary fallback)
+        if: ${{ !cancelled() && inputs.secret_scan && env.GITLEAKS_LICENSE == '' }}
+        env:
+          GITLEAKS_VERSION: 8.21.2
+          BASE_SHA: ${{ steps.base.outputs.sha }}
+        run: |
+          set -euo pipefail
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | tar -xz -C /tmp gitleaks
+          /tmp/gitleaks detect --source . --redact --no-banner --exit-code 1 \
+            --log-opts "${BASE_SHA}..HEAD"
+
+  build:
+    name: build
+    if: inputs.package_manager != 'none'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.install_dir }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+
+      - name: Enable corepack
+        if: inputs.package_manager == 'yarn'
+        run: corepack enable
+
+      # Yarn 4 clones git deps in a sanitised environment (no askpass, no
+      # extraheader, a foreign $HOME); the one channel git always reads is
+      # GIT_CONFIG_COUNT/KEY/VALUE, so the token rides in a url.insteadOf
+      # rewrite — the same mechanism LazyWaitERP's deploy.yml uses. Only set
+      # when a token exists, so public dependencies are never sent a blank one.
+      - name: Install (frozen lockfile)
+        env:
+          DEP_TOKEN: ${{ secrets.LAZYWAITUTIL_TOKEN || secrets.GH_PAT }}
+          GIT_TERMINAL_PROMPT: '0'
+        run: |
+          set -euo pipefail
+          if [ -n "${DEP_TOKEN:-}" ]; then
+            export GIT_CONFIG_COUNT=1
+            export GIT_CONFIG_KEY_0="url.https://x-access-token:${DEP_TOKEN}@github.com/.insteadOf"
+            export GIT_CONFIG_VALUE_0="https://github.com/"
+          fi
+          case "${{ inputs.package_manager }}" in
+            yarn) yarn install --immutable ;;
+            npm)  npm ci ;;
+            *)    echo "unknown package_manager"; exit 1 ;;
+          esac
+
+      - name: Build
+        if: inputs.build_cmd != ''
+        run: ${{ inputs.build_cmd }}
+
+      - name: Audit (high and above)
+        if: inputs.audit
+        continue-on-error: ${{ !inputs.audit_blocking }}
+        run: |
+          set -euo pipefail
+          case "${{ inputs.package_manager }}" in
+            yarn) yarn npm audit --severity high --all ;;
+            npm)  npm audit --audit-level=high ;;
+          esac

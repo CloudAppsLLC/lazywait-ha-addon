@@ -1,0 +1,327 @@
+name: ai-review-reusable
+
+# The one copy of the AI review gate, called by all ten repos.
+#
+# The reviewer and its rules are read from the BASE branch, never from the pull
+# request. A PR cannot soften the reviewer that is judging it: editing
+# REVIEW_RULES.md or ai-review.mjs only takes effect after that edit has itself
+# been merged through a code-owner review.
+#
+# WHETHER to review, and the passing score, come from ERP → Deployment → GitHub
+# settings (GET /v1/platform/github-agent/ci/:repo) — also out of the PR's reach.
+# When that policy cannot be read, the `with:` inputs below apply and the review
+# runs: an unreadable policy never skips one.
+#
+# The review step is continue-on-error so the comment always gets posted — the
+# author sees WHY it failed — and the job then fails on the step's outcome.
+
+on:
+  workflow_call:
+    inputs:
+      node_version:
+        type: string
+        # Claude Code's npm package requires Node 22+.
+        default: '22'
+      model:
+        description: Claude model id for the review.
+        type: string
+        default: claude-sonnet-5
+      min_score:
+        description: Minimum passing score out of 10.
+        type: string
+        default: '7'
+      max_diff_chars:
+        description: The most one review reads. A bigger diff is reviewed in parts of this size, each judged as its own PR.
+        type: string
+        default: '120000'
+      max_review_parts:
+        description: A diff needing more parts than this is rejected as too large to review.
+        type: string
+        default: '8'
+      api_base:
+        description: LazyWait API base the review policy is read from.
+        type: string
+        default: https://apiv2.lazywait.com/v1
+      review_paths:
+        description: >-
+          Space-separated paths the review reads (default: the whole repo). For a
+          repo that is mostly generated content (LazyWaitSupportKB: thousands of
+          draft/capture files per PR), list its code directories so a content PR
+          is "nothing to review" instead of a diff too large to review.
+        type: string
+        default: '.'
+    secrets:
+      # Read-only token for GET /v1/platform/github-agent/ci/:repo — the policy
+      # set in ERP → Deployment → GitHub settings (which repos and base branches
+      # require the review, who may skip it, the passing score). Must equal
+      # GITHUB_AGENT_CI_TOKEN on the API host. (GitHub refuses secret names that
+      # start with GITHUB_, hence the different name.) Optional: without it, or
+      # whenever the API cannot be reached, the review runs on the inputs above —
+      # a policy that cannot be read never skips a review.
+      LAZYWAIT_REVIEW_POLICY_TOKEN:
+        required: false
+      # The team's Claude Max plan, from `claude setup-token` (valid one year).
+      # Subscription ONLY: there is deliberately no API-key secret here, and the
+      # reviewer strips ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN from Claude
+      # Code's environment, so a review can never fall into per-token billing.
+      CLAUDE_CODE_OAUTH_TOKEN:
+        required: false
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    name: review
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # The checkout is GitHub's merge commit (refs/pull/N/merge): its FIRST
+      # PARENT is the base branch as it is now, so diffing against it is exactly
+      # what merging this PR would change. pull_request.base.sha is not that: it
+      # stays at the fork point when the base branch moves on, and diffing the
+      # merge commit against it counts everything merged into the base since as
+      # part of this PR (ERP #245: a 76k sync PR refused as 596k, the other 520k
+      # being ERP #253, already merged). It would also pin the reviewer from that
+      # stale commit instead of from the base branch's current copy.
+      - name: Resolve the base
+        id: base
+        env:
+          EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if git rev-parse -q --verify 'HEAD^2' >/dev/null; then
+            sha="$(git rev-parse 'HEAD^1')"
+          else
+            sha="$EVENT_BASE_SHA"
+          fi
+          echo "base: $sha (event base.sha: $EVENT_BASE_SHA)"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      # The policy set in ERP → Deployment → GitHub settings. The API decides
+      # (repo on? reviewer on? base branch listed? author AND pusher both on the
+      # skip list?) so this step only reads a boolean plus the passing score.
+      #
+      # FAILS TOWARD REVIEWING. No token, a network error, a non-200 or a
+      # malformed body all leave review=true on this workflow's own inputs. Only
+      # a well-formed answer from the API can skip a review. Every value it
+      # returns is type-checked before it reaches a later step.
+      - name: Read the review policy
+        id: policy
+        env:
+          POLICY_TOKEN: ${{ secrets.LAZYWAIT_REVIEW_POLICY_TOKEN }}
+          API_BASE: ${{ inputs.api_base }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          ACTOR: ${{ github.actor }}
+          DEFAULT_MODEL: ${{ inputs.model }}
+          DEFAULT_MIN_SCORE: ${{ inputs.min_score }}
+          DEFAULT_MAX_DIFF_CHARS: ${{ inputs.max_diff_chars }}
+        run: |
+          set -uo pipefail
+          review=true; reason=fallback
+          model="$DEFAULT_MODEL"; min_score="$DEFAULT_MIN_SCORE"; max_diff="$DEFAULT_MAX_DIFF_CHARS"
+          if [ -z "$POLICY_TOKEN" ]; then
+            echo "::notice::LAZYWAIT_REVIEW_POLICY_TOKEN is not set — reviewing on this workflow's defaults (ERP GitHub settings not applied)."
+          else
+            code=$(curl -sS -G -o policy.json -w '%{http_code}' --max-time 20 \
+              -H "x-github-agent-token: $POLICY_TOKEN" \
+              --data-urlencode "base=$BASE_REF" \
+              --data-urlencode "author=$PR_AUTHOR" \
+              --data-urlencode "actor=$ACTOR" \
+              "$API_BASE/platform/github-agent/ci/$REPO_NAME" || echo 000)
+            if [ "$code" = "200" ] && jq -e '
+                (.review | type == "boolean") and
+                (.reason | type == "string" and test("^[a-z_]{1,40}$")) and
+                (.model | type == "string" and test("^[A-Za-z0-9._:-]{1,60}$")) and
+                (.minScore | type == "number" and . >= 0 and . <= 10) and
+                (.maxDiffChars | type == "number" and . >= 1000 and . <= 500000)
+              ' policy.json >/dev/null 2>&1; then
+              review=$(jq -r '.review' policy.json)
+              reason=$(jq -r '.reason' policy.json)
+              model=$(jq -r '.model' policy.json)
+              min_score=$(jq -r '.minScore' policy.json)
+              max_diff=$(jq -r '.maxDiffChars | floor' policy.json)
+              echo "policy: review=$review reason=$reason min_score=$min_score model=$model (updated $(jq -r '.updatedAt // "never"' policy.json))"
+            else
+              echo "::warning::Could not read the review policy (HTTP $code) — reviewing on this workflow's defaults. 401=token mismatch with GITHUB_AGENT_CI_TOKEN on the API; 503=not set on the API; 404=API not deployed yet or unknown repo; 000=network."
+            fi
+            rm -f policy.json
+          fi
+          {
+            echo "review=$review"
+            echo "reason=$reason"
+            echo "model=$model"
+            echo "min_score=$min_score"
+            echo "max_diff_chars=$max_diff"
+          } >> "$GITHUB_OUTPUT"
+
+      # A skipped review still PASSES this check (branch protection requires
+      # `review / review`), and says why on the PR so nobody mistakes it for an
+      # approval.
+      - name: Note the skipped review
+        if: steps.policy.outputs.review == 'false'
+        env:
+          REASON: ${{ steps.policy.outputs.reason }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          set -euo pipefail
+          case "$REASON" in
+            disabled_repo)       why="this repository does not require the AI reviewer" ;;
+            disabled_global)     why="the AI reviewer is switched off for every repository" ;;
+            branch_not_required) why="pull requests into \`$BASE_REF\` do not require review" ;;
+            bypass_user)         why="@$PR_AUTHOR is on the skip list" ;;
+            *)                   why="the review policy says so ($REASON)" ;;
+          esac
+          {
+            echo '### 🤖 AI code review'
+            echo
+            echo "**Skipped** — $why."
+            echo
+            echo '> Set in ERP → Deployment → GitHub settings. This is not an approval: nothing in this PR was reviewed.'
+          } > review.md
+          echo "skipped: $REASON"
+
+      # Floor of 22: Claude Code's npm package refuses older Node. Callers pass
+      # their repo's BUILD version (often 20), which is right for guardrails and
+      # irrelevant here — the reviewer builds nothing.
+      - uses: actions/setup-node@v4
+        if: steps.policy.outputs.review == 'true'
+        with:
+          node-version: ${{ inputs.node_version < 22 && '22' || inputs.node_version }}
+
+      # Pinned, not @latest: the gate must not change behaviour under a PR
+      # because a new CLI shipped overnight. Bump deliberately.
+      - name: Install Claude Code
+        if: steps.policy.outputs.review == 'true'
+        run: npm install -g @anthropic-ai/claude-code@2.1.283
+
+      - name: Load the reviewer from the base branch
+        if: steps.policy.outputs.review == 'true'
+        env:
+          BASE_SHA: ${{ steps.base.outputs.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p .github/scripts
+          for f in .github/scripts/ai-review.mjs REVIEW_RULES.md; do
+            if git cat-file -e "$BASE_SHA:$f" 2>/dev/null; then
+              git show "$BASE_SHA:$f" > "$f"
+              echo "pinned $f from the base branch"
+            else
+              echo "::warning::$f is not on the base branch yet — using this PR's copy. Expected only on the PR that introduces the reviewer."
+            fi
+          done
+
+      - name: Build the diff
+        if: steps.policy.outputs.review == 'true'
+        env:
+          BASE_SHA: ${{ steps.base.outputs.sha }}
+          REVIEW_PATHS: ${{ inputs.review_paths }}
+        run: |
+          set -euo pipefail
+          # Plain relative paths only: the value is split into git pathspecs, so
+          # no globs, no leading '-' or ':' magic, no '..'.
+          if ! [[ "$REVIEW_PATHS" =~ ^[A-Za-z0-9._/\ -]+$ ]] || [[ "$REVIEW_PATHS" == *..* ]] || [[ " $REVIEW_PATHS" == *" -"* ]]; then
+            echo "::error::review_paths must be plain relative paths separated by spaces (got: $REVIEW_PATHS)"
+            exit 1
+          fi
+          set -f
+          read -r -a paths <<< "$REVIEW_PATHS"
+          set +f
+          git diff --no-color "$BASE_SHA"...HEAD -- "${paths[@]}" \
+            ':(exclude)**/yarn.lock' \
+            ':(exclude)**/package-lock.json' \
+            ':(exclude)**/pnpm-lock.yaml' \
+            ':(exclude)**/Podfile.lock' \
+            ':(exclude)**/Gemfile.lock' \
+            ':(exclude)dist/**' ':(exclude)**/dist/**' \
+            ':(exclude)build/**' ':(exclude)**/build/**' \
+            ':(exclude)lib/**' ':(exclude)**/lib/**' \
+            ':(exclude)**/node_modules/**' \
+            ':(exclude).yarn/**' \
+            ':(exclude)**/*.min.js' \
+            ':(exclude)**/*.map' \
+            > pr.diff || true
+          echo "diff size: $(wc -c < pr.diff) bytes"
+
+      - name: Review
+        id: review
+        if: steps.policy.outputs.review == 'true'
+        continue-on-error: true
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          REVIEW_MODEL: ${{ steps.policy.outputs.model }}
+          MIN_SCORE: ${{ steps.policy.outputs.min_score }}
+          MAX_DIFF_CHARS: ${{ steps.policy.outputs.max_diff_chars }}
+          MAX_REVIEW_PARTS: ${{ inputs.max_review_parts }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node .github/scripts/ai-review.mjs
+
+      - name: Post the review
+        if: always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: ai-review
+          path: review.md
+
+      # GitHub's pull-request list has no custom columns, but it shows labels,
+      # so the score rides on one — "review: 9/10" — and the whole queue reads
+      # without opening a PR. A label's colour is per NAME, repo-wide, so it may
+      # only encode what is true of every PR wearing it: the score against this
+      # repo's minimum. A PR that clears the minimum but has a blocking finding
+      # wears "review: blocked" instead, and a run that ended without a score
+      # (refused as too large, usage limit, crash) wears "review: error" — never
+      # the previous run's number, which would vouch for code nobody reviewed.
+      #
+      # Best effort: a fork PR's token cannot write labels, and the label is a
+      # view of the result, never the gate — the step below still decides.
+      - name: Label the PR with its score
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          MIN_SCORE: ${{ steps.policy.outputs.min_score }}
+          OUTCOME: ${{ steps.review.outcome }}
+          REVIEWED: ${{ steps.policy.outputs.review }}
+        run: |
+          set -euo pipefail
+          at_least() { awk -v a="$1" -v b="$2" 'BEGIN { exit !(a >= b) }'; }
+          score="$(grep -oE '\*\*Score: [0-9]+(\.[0-9]+)?/10\*\*' review.md 2>/dev/null | head -n1 | grep -oE '[0-9]+(\.[0-9]+)?' | head -n1 || true)"
+          if [ "$REVIEWED" = 'false' ]; then
+            name='review: skipped'; color='bfd4f2'; desc='AI review skipped by the policy in ERP GitHub settings. Not an approval.'
+          elif [ -z "$score" ]; then
+            name='review: error'; color='6e7781'; desc='The AI review ended without a score. See the PR comment.'
+          elif [ "$OUTCOME" != 'success' ] && at_least "$score" "$MIN_SCORE"; then
+            name='review: blocked'; color='b60205'; desc='Scored above the minimum, but the AI review found a blocking issue.'
+          else
+            name="review: ${score}/10"
+            if at_least "$score" 9; then color='0e8a16'
+            elif at_least "$score" "$MIN_SCORE"; then color='c2e0c6'
+            else color='d73a4a'; fi
+            desc="AI review score (minimum ${MIN_SCORE}/10)."
+          fi
+          echo "label: $name"
+          # Created on first use; a 422 just means it already exists.
+          gh api -X POST "repos/$REPO/labels" -f name="$name" -f color="$color" -f description="$desc" >/dev/null 2>&1 || true
+          # PUT the whole set: the other labels as they are, every older
+          # "review: …" swapped for this run's.
+          args=(-f "labels[]=$name")
+          while IFS= read -r keep; do
+            [ -n "$keep" ] && args+=(-f "labels[]=$keep")
+          done < <(gh api "repos/$REPO/issues/$PR_NUMBER/labels?per_page=100" --jq '.[].name | select(startswith("review: ") | not)')
+          gh api -X PUT "repos/$REPO/issues/$PR_NUMBER/labels" "${args[@]}" >/dev/null
+
+      - name: Fail if the review did not pass
+        if: steps.review.outcome == 'failure'
+        run: |
+          echo "::error::The AI review found blocking issues or scored below the minimum. See the PR comment."
+          exit 1
