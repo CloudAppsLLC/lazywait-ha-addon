@@ -1,0 +1,55 @@
+# lazywait-ha-addon — Claude playbook
+
+PUBLIC Home Assistant add-on repository: the add-on manifest (config.yaml) and docs. LazyWaitPrintServer CI pushes each release version here.
+
+<!-- LAZYWAIT-GUARDRAILS:START v1 — generated. Canonical source:
+     LazyWaitInternalAPI/scripts/guardrails/CLAUDE.guardrails.md
+     Re-sync with: node scripts/guardrails/sync-guardrails.mjs
+     Edits between these markers are overwritten. Put repo-specific rules
+     OUTSIDE the markers, anywhere else in this file. -->
+
+# Guardrails — rules for every AI coding tool in this repo
+
+These apply to Claude Code, Cursor, Copilot, Codex, and to humans. They are enforced in CI by `.github/workflows/guardrails.yml` and reviewed by `.github/scripts/ai-review.mjs`. A PR that breaks one does not merge, so check before you write, not after.
+
+Two facts behind most of this:
+
+- **The API holds the service-role key, so RLS does not bound it.** Tenant isolation is a caller-supplied `client_id` plus a membership check in code. A query missing that filter is a cross-tenant leak, not a slow query.
+- **Supabase bills per Realtime message, per GB egressed and per GB of logs.** One unfiltered subscription billed 201,696,244 messages and 142 GB of log ingestion in the September 2026 cycle. Cost is a correctness property here.
+
+## Never
+
+1. **No Realtime.** No `postgres_changes`, no `onSnapshot`, no new `.channel()`. If you need live data, poll on a ≥60s cadence, or have the server push a scoped `Broadcast` event on a topic like `tenant:<id>:<thing>` — never a bare table name, and always with a `removeChannel` in the same cleanup. Do not add a table to the `supabase_realtime` publication.
+2. **No polling faster than 60 seconds.** Under 5s fails outright and no comment waives it. Between 5s and 60s needs `// poll-ok: <why an event cannot be pushed instead>` on the line or the line above. Multiply by the fleet before defending an interval: 5s on one screen across 800 tills is ~14M requests a day. A write triggered by movement, scrolling or typing is a poll with no interval — throttle it with an explicit floor.
+3. **Never disable RLS.** No `DISABLE ROW LEVEL SECURITY`, ever. Every new table gets `ENABLE ROW LEVEL SECURITY` plus at least a deny-all policy. If RLS is in the way because Realtime will not deliver events, delete the subscription — that trade has already cost a billing cycle.
+4. **Never put a `service_role` or admin key in frontend code.** Not in a `VITE_*` / `EXPO_PUBLIC_*` / `NEXT_PUBLIC_*` variable, not in a constant, not passed to a client, not in a comment. Anon keys in client source are correct and expected. Service-role keys live in the API's environment or the Supabase Vault and go no further. Never commit a `.env` — it stays in git history after you delete it.
+5. **No schema or data change outside a migration file.** Write `supabase/migrations/<NNN>_<verb>_<noun>.sql`, idempotent, with a header explaining *why*, and hand it to a human to apply. No `exec_sql` with a mutating statement, no apply script, no `supabase db push`, no `psql`.
+6. **No new dependency without asking first.** Say what it replaces and what it weighs. Prefer the standard library, then something already in the lockfile.
+
+## Always
+
+7. **Paginate every list query, maximum page size 100.** `.limit()` or `.range()`, plus a stable sort key so pages cannot repeat or skip rows.
+8. **Name your columns.** No `select('*')` on a table that grows — `pos_orders` is past a million rows. `select('*')` is acceptable only on a small config table, with a ceiling.
+9. **Handle loading, error and empty as well as success** — all four, all translated. A component with only the success path ships a blank screen the first time the network is slow. Never swallow an error: Supabase resolves with `{ error }` rather than throwing, so an unchecked error reads as "no such record" to the user.
+10. **Debounce anything triggered by typing** — 300ms is the house default for a search box — and throttle anything triggered by scroll, resize or movement. Cancel the in-flight request when a new one supersedes it.
+11. **Every user-facing string goes through the dictionary.** Labels, headings, column headers, placeholders, helper text, tooltips, toasts, empty and loading states, confirmation dialogs, and the `aria-label` of every icon-only control. A new API `errorKey` gets its dictionary entry in the same PR with every supported language present. `ar` and `ur` are RTL: use `ps-*`/`pe-*`/`ms-*`/`me-*`, never `pl-*`/`pr-*`/`ml-*`/`mr-*`.
+12. **Clean up every effect.** A subscription, socket, timer or listener opened in an effect is closed in its cleanup, and the dependency array cannot re-run it needlessly — an effect that re-runs on every render leaks one timer per render.
+13. **Validate input at the boundary with Zod,** and never interpolate a request value into SQL, a PostgREST `.or()` string, a file path, a shell command or a URL. A user-facing error returns `{ errorKey, ...context }` and never a stack trace, a table name or an internal id.
+14. **Object storage goes through the gateway** — the API's `shared/storage` module, or the signed-URL flow in a client. Never call `.storage.from(...)`, `getPublicUrl`, `createSignedUrl` or `createSignedUploadUrl` directly. Store the bare path in the database and mint URLs on read. Validate MIME type and size server-side before signing an upload.
+
+## House style
+
+- No `any`, no `@ts-ignore`, no `as unknown as`. No commented-out code.
+- No new `.js`/`.jsx` in a TypeScript tree. Converting an existing `.js` to `.ts` is welcome.
+- Database: `lowercase_snake_case`, domain-prefixed tables, `<table_singular>_id` foreign keys, `is_*`/`has_*` booleans, `timestamptz` timestamps named `created_at`/`updated_at`/`deleted_at`.
+- Files: `PascalCase.tsx` components, `camelCase.ts` hooks (starting with `use`) and utilities. Identifiers: `camelCase` values, `PascalCase` types, `SCREAMING_SNAKE_CASE` true constants and dictionary keys.
+- Routes stay thin; services own the data access. A new route ships with a Zod schema, error handling and a test. A new table ships with a migration, RLS, regenerated types and a test — test the policy, not only the happy path.
+- Prefer editing an existing file over creating one, and match the surrounding code's idiom and naming.
+
+## If a rule is genuinely wrong for your change
+
+Say so in the PR description and use the justification comment the gate names (`poll-ok:`, `realtime-ok:`, `select-all-ok:`, `service-role-ok:`). Do not edit `.github/`, `REVIEW_RULES.md` or `guardrails.config.json` to make a check pass — those are code-owner-protected, the gate reads them from the base branch, and a PR that weakens its own reviewer is the one thing here treated as a security finding.
+
+Full reviewer rules, with the reasoning: [`REVIEW_RULES.md`](REVIEW_RULES.md). Thresholds and per-repo settings are managed in **LazyWaitERP → Platform → GitHub Agent**.
+
+<!-- LAZYWAIT-GUARDRAILS:END -->
