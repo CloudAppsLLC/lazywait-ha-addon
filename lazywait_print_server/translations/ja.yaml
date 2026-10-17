@@ -1,0 +1,13 @@
+configuration:
+  TZ:
+    name: "タイムゾーン"
+    description: "店舗のタイムゾーン (例: Asia/Riyadh)。レシートは Home Assistant 自体のタイムゾーン (設定 → システム → 一般) で印刷されるため、そちらも店舗のタイムゾーンに設定してください。"
+  PORT:
+    name: "ポート"
+    description: "プリントサーバーが待ち受けるポート。既定値: 80。"
+  LAN_IP:
+    name: "LAN IP アドレス"
+    description: "店舗ネットワーク上のこのデバイスの IP アドレス (例: 192.168.100.150)。空欄にすると自動検出されます。"
+  LAZYWAIT_API_BASE:
+    name: "LazyWait クラウド URL"
+    description: "LazyWait クラウド API のアドレス。LazyWait サポートから指示がない限り、既定値 (https://apiv2.lazywait.com/v1) のままにしてください。"

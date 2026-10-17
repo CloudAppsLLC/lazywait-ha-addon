@@ -1,0 +1,13 @@
+configuration:
+  TZ:
+    name: "Tijdzone"
+    description: "De tijdzone van de vestiging, bijv. Asia/Riyadh. Bonnen worden afgedrukt in de eigen tijdzone van Home Assistant (Instellingen → Systeem → Algemeen), dus stel die ook in op de tijdzone van de vestiging."
+  PORT:
+    name: "Poort"
+    description: "De poort waarop de printserver luistert. Standaard: 80."
+  LAN_IP:
+    name: "LAN-IP-adres"
+    description: "Het IP-adres van dit apparaat op het netwerk van de vestiging, bijv. 192.168.100.150. Laat leeg om het automatisch te detecteren."
+  LAZYWAIT_API_BASE:
+    name: "LazyWait-cloud-URL"
+    description: "Het API-adres van de LazyWait-cloud. Behoud de standaardwaarde (https://apiv2.lazywait.com/v1), tenzij LazyWait-support iets anders aangeeft."

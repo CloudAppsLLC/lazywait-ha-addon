@@ -1,0 +1,13 @@
+configuration:
+  TZ:
+    name: "时区"
+    description: "门店所在时区，例如 Asia/Riyadh。小票按 Home Assistant 自身的时区打印（设置 → 系统 → 常规），因此也请将其设为门店时区。"
+  PORT:
+    name: "端口"
+    description: "打印服务器监听的端口。默认：80。"
+  LAN_IP:
+    name: "局域网 IP 地址"
+    description: "此设备在门店网络中的 IP 地址，例如 192.168.100.150。留空则自动检测。"
+  LAZYWAIT_API_BASE:
+    name: "LazyWait 云端 URL"
+    description: "LazyWait 云端 API 地址。除非 LazyWait 支持团队另有说明，否则请保留默认值（https://apiv2.lazywait.com/v1）。"

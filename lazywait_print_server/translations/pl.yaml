@@ -1,0 +1,13 @@
+configuration:
+  TZ:
+    name: "Strefa czasowa"
+    description: "Strefa czasowa sklepu, np. Asia/Riyadh. Paragony są drukowane w strefie czasowej samego Home Assistant (Ustawienia → System → Ogólne), więc ustaw tam również strefę sklepu."
+  PORT:
+    name: "Port"
+    description: "Port, na którym nasłuchuje serwer wydruku. Domyślnie: 80."
+  LAN_IP:
+    name: "Adres IP w sieci LAN"
+    description: "Adres IP tego urządzenia w sieci oddziału, np. 192.168.100.150. Pozostaw puste, aby wykryć go automatycznie."
+  LAZYWAIT_API_BASE:
+    name: "Adres URL chmury LazyWait"
+    description: "Adres API chmury LazyWait. Zachowaj wartość domyślną (https://apiv2.lazywait.com/v1), chyba że wsparcie LazyWait zaleci inaczej."

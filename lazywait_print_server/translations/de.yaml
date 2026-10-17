@@ -1,0 +1,13 @@
+configuration:
+  TZ:
+    name: "Zeitzone"
+    description: "Die Zeitzone der Filiale, z. B. Asia/Riyadh. Belege werden in der eigenen Zeitzone von Home Assistant gedruckt (Einstellungen → System → Allgemein), stelle daher auch dort die Zeitzone der Filiale ein."
+  PORT:
+    name: "Port"
+    description: "Der Port, auf dem der Druckserver lauscht. Standard: 80."
+  LAN_IP:
+    name: "LAN-IP-Adresse"
+    description: "Die IP-Adresse dieses Geräts im Filialnetzwerk, z. B. 192.168.100.150. Leer lassen, um sie automatisch zu ermitteln."
+  LAZYWAIT_API_BASE:
+    name: "LazyWait-Cloud-URL"
+    description: "Die API-Adresse der LazyWait-Cloud. Behalte den Standardwert (https://apiv2.lazywait.com/v1) bei, sofern der LazyWait-Support nichts anderes sagt."

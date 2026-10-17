@@ -1,0 +1,13 @@
+configuration:
+  TZ:
+    name: "समय क्षेत्र"
+    description: "स्टोर का समय क्षेत्र, जैसे Asia/Riyadh। रसीदें Home Assistant के अपने समय क्षेत्र (सेटिंग्स → सिस्टम → सामान्य) में प्रिंट होती हैं, इसलिए वहां भी स्टोर का समय क्षेत्र सेट करें।"
+  PORT:
+    name: "पोर्ट"
+    description: "वह पोर्ट जिस पर प्रिंट सर्वर सुनता है। डिफ़ॉल्ट: 80।"
+  LAN_IP:
+    name: "LAN IP पता"
+    description: "शाखा नेटवर्क पर इस डिवाइस का IP पता, जैसे 192.168.100.150। अपने-आप पता लगाने के लिए खाली छोड़ें।"
+  LAZYWAIT_API_BASE:
+    name: "LazyWait क्लाउड URL"
+    description: "LazyWait क्लाउड API का पता। जब तक LazyWait सपोर्ट कुछ और न कहे, डिफ़ॉल्ट (https://apiv2.lazywait.com/v1) ही रखें।"

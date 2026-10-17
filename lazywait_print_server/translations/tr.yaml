@@ -1,0 +1,13 @@
+configuration:
+  TZ:
+    name: "Saat dilimi"
+    description: "Mağazanın saat dilimi, ör. Asia/Riyadh. Fişler Home Assistant'ın kendi saat diliminde yazdırılır (Ayarlar → Sistem → Genel), bu yüzden orada da mağazanın saat dilimini ayarlayın."
+  PORT:
+    name: "Bağlantı noktası"
+    description: "Yazdırma sunucusunun dinlediği bağlantı noktası. Varsayılan: 80."
+  LAN_IP:
+    name: "LAN IP adresi"
+    description: "Bu cihazın şube ağındaki IP adresi, ör. 192.168.100.150. Otomatik algılanması için boş bırakın."
+  LAZYWAIT_API_BASE:
+    name: "LazyWait bulut URL'si"
+    description: "LazyWait bulut API adresi. LazyWait desteği aksini söylemedikçe varsayılanı (https://apiv2.lazywait.com/v1) koruyun."

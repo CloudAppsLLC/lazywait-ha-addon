@@ -1,0 +1,13 @@
+configuration:
+  TZ:
+    name: "Fuseau horaire"
+    description: "Le fuseau horaire de l'établissement, par ex. Asia/Riyadh. Les reçus sont imprimés dans le fuseau horaire de Home Assistant lui-même (Paramètres → Système → Général) : réglez-le aussi sur celui de l'établissement."
+  PORT:
+    name: "Port"
+    description: "Le port sur lequel le serveur d'impression écoute. Par défaut : 80."
+  LAN_IP:
+    name: "Adresse IP LAN"
+    description: "L'adresse IP de cet appareil sur le réseau de la succursale, par ex. 192.168.100.150. Laissez vide pour la détecter automatiquement."
+  LAZYWAIT_API_BASE:
+    name: "URL du cloud LazyWait"
+    description: "L'adresse de l'API du cloud LazyWait. Conservez la valeur par défaut (https://apiv2.lazywait.com/v1) sauf indication contraire du support LazyWait."

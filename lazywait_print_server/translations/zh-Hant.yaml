@@ -1,0 +1,13 @@
+configuration:
+  TZ:
+    name: "時區"
+    description: "門市所在時區，例如 Asia/Riyadh。收據會依 Home Assistant 本身的時區列印（設定 → 系統 → 一般），因此也請將其設為門市時區。"
+  PORT:
+    name: "連接埠"
+    description: "列印伺服器監聽的連接埠。預設：80。"
+  LAN_IP:
+    name: "區域網路 IP 位址"
+    description: "此裝置在門市網路中的 IP 位址，例如 192.168.100.150。留空則自動偵測。"
+  LAZYWAIT_API_BASE:
+    name: "LazyWait 雲端 URL"
+    description: "LazyWait 雲端 API 位址。除非 LazyWait 支援團隊另有指示，否則請保留預設值（https://apiv2.lazywait.com/v1）。"

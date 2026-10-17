@@ -1,0 +1,13 @@
+configuration:
+  TZ:
+    name: "Time zone"
+    description: "The store's time zone, e.g. Asia/Riyadh. Receipts print in Home Assistant's own time zone (Settings → System → General), so set that to the store's zone too."
+  PORT:
+    name: "Port"
+    description: "The port the print server listens on. Default: 80."
+  LAN_IP:
+    name: "LAN IP address"
+    description: "This device's IP address on the branch network, e.g. 192.168.100.150. Leave blank to detect it automatically."
+  LAZYWAIT_API_BASE:
+    name: "LazyWait cloud URL"
+    description: "The LazyWait cloud API address. Keep the default (https://apiv2.lazywait.com/v1) unless LazyWait support tells you otherwise."

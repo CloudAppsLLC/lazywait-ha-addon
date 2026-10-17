@@ -1,0 +1,13 @@
+configuration:
+  TZ:
+    name: "ٹائم زون"
+    description: "اسٹور کا ٹائم زون، مثلاً Asia/Riyadh۔ رسیدیں Home Assistant کے اپنے ٹائم زون (ترتیبات ← سسٹم ← عمومی) میں پرنٹ ہوتی ہیں، اس لیے وہاں بھی اسٹور کا ٹائم زون سیٹ کریں۔"
+  PORT:
+    name: "پورٹ"
+    description: "وہ پورٹ جس پر پرنٹ سرور سنتا ہے۔ ڈیفالٹ: 80۔"
+  LAN_IP:
+    name: "LAN IP ایڈریس"
+    description: "برانچ نیٹ ورک پر اس ڈیوائس کا IP ایڈریس، مثلاً 192.168.100.150۔ خود بخود معلوم کرنے کے لیے خالی چھوڑ دیں۔"
+  LAZYWAIT_API_BASE:
+    name: "LazyWait کلاؤڈ URL"
+    description: "LazyWait کلاؤڈ API کا پتہ۔ جب تک LazyWait سپورٹ کچھ اور نہ کہے، ڈیفالٹ (https://apiv2.lazywait.com/v1) برقرار رکھیں۔"

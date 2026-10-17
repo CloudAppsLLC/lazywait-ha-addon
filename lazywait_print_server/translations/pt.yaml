@@ -1,0 +1,13 @@
+configuration:
+  TZ:
+    name: "Fuso horário"
+    description: "O fuso horário da loja, ex.: Asia/Riyadh. Os recibos são impressos no fuso horário do próprio Home Assistant (Configurações → Sistema → Geral), então configure-o também com o fuso da loja."
+  PORT:
+    name: "Porta"
+    description: "A porta em que o servidor de impressão escuta. Padrão: 80."
+  LAN_IP:
+    name: "Endereço IP da LAN"
+    description: "O endereço IP deste dispositivo na rede da filial, ex.: 192.168.100.150. Deixe em branco para detectá-lo automaticamente."
+  LAZYWAIT_API_BASE:
+    name: "URL da nuvem do LazyWait"
+    description: "O endereço da API da nuvem do LazyWait. Mantenha o padrão (https://apiv2.lazywait.com/v1), a menos que o suporte do LazyWait indique o contrário."

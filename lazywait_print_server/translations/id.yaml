@@ -1,0 +1,13 @@
+configuration:
+  TZ:
+    name: "Zona waktu"
+    description: "Zona waktu toko, mis. Asia/Riyadh. Struk dicetak dalam zona waktu Home Assistant sendiri (Pengaturan → Sistem → Umum), jadi atur juga zona waktu toko di sana."
+  PORT:
+    name: "Port"
+    description: "Port yang didengarkan server cetak. Bawaan: 80."
+  LAN_IP:
+    name: "Alamat IP LAN"
+    description: "Alamat IP perangkat ini di jaringan cabang, mis. 192.168.100.150. Biarkan kosong untuk mendeteksinya secara otomatis."
+  LAZYWAIT_API_BASE:
+    name: "URL cloud LazyWait"
+    description: "Alamat API cloud LazyWait. Pertahankan nilai bawaan (https://apiv2.lazywait.com/v1) kecuali dukungan LazyWait meminta lain."
