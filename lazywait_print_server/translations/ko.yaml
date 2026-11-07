@@ -11,3 +11,39 @@ configuration:
   LAZYWAIT_API_BASE:
     name: "LazyWait 클라우드 URL"
     description: "LazyWait 클라우드 API 주소입니다. LazyWait 지원팀의 별도 안내가 없으면 기본값(https://apiv2.lazywait.com/v1)을 유지하세요."
+  listen_orders:
+    name: "주문 자동 인쇄"
+    description: "새 주문을 수신하여 자동으로 인쇄합니다. 이 기기에서 주문 수신을 중지하려면 끄세요."
+  listen_openings:
+    name: "계산대 개시 자동 인쇄"
+    description: "계산대 개시를 수신하여 자동으로 인쇄합니다. 이 지점에서 개시를 사용하지 않으면 끄세요."
+  listen_closings:
+    name: "계산대 마감 자동 인쇄"
+    description: "계산대 마감을 수신하여 자동으로 인쇄합니다. 이 지점에서 마감을 사용하지 않으면 끄세요."
+  enable_camera_ai:
+    name: "카메라 AI 허용"
+    description: "카메라 AI의 마스터 스위치입니다. 켜져 있어도 카메라 AI는 프린트 서버의 기능 페이지에서 켜거나 끕니다(기본값은 꺼짐). 이 기기에서 절대 시작되지 않게 하려면 끄세요."
+  enable_live_webrtc:
+    name: "카메라 실시간 직접 보기"
+    description: "LazyWait 앱이 이 기기에서 카메라 실시간 영상을 직접 재생할 수 있게 합니다(포트 18556 UDP/TCP의 P2P WebRTC). LazyWait 클라우드는 양쪽의 연결만 도와주며 영상은 클라우드를 거치지 않습니다. 기본값은 켜짐입니다. 로컬 영상 서비스를 중지하려면 끄세요."
+  enable_loss_prevention:
+    name: "손실 방지"
+    description: "손실 방지 에이전트를 켭니다(기본값: 꺼짐). ERP에서 매핑한 Home Assistant 엔티티(셔터, 출입문, 잠금장치, 경보, 조명, 동작 감지, 금전함)를 감시하고 서명된 결과를 LazyWait 클라우드로 보냅니다. Home Assistant 액세스 토큰이 필요합니다. aarch64 전용입니다."
+  ha_url:
+    name: "Home Assistant URL"
+    description: "손실 방지 에이전트가 사용할 Home Assistant 주소입니다. Home Assistant가 다른 호스트에서 실행되는 경우가 아니면 비워 두세요(기본값: http://127.0.0.1:8123)."
+  ha_token:
+    name: "Home Assistant 액세스 토큰"
+    description: "손실 방지 에이전트가 사용하는 Home Assistant 관리자 사용자의 장기 액세스 토큰입니다(프로필 → 보안 → 장기 액세스 토큰)."
+  isapi_username:
+    name: "카메라 / NVR 사용자 이름"
+    description: "손실 방지의 증거 스냅샷, NVR 재생, 카메라 자체 인원 계수에 쓰는 카메라 또는 NVR 계정(Hikvision ISAPI)입니다. 이 기기에만 저장됩니다. 카메라 보조 스트림만 분석하려면 비워 두세요."
+  isapi_password:
+    name: "카메라 / NVR 비밀번호"
+    description: "위 카메라 / NVR 계정의 비밀번호입니다. 이 기기에만 저장되며 LazyWait로 전송되지 않습니다."
+  lp_agent_port:
+    name: "손실 방지 에이전트 포트"
+    description: "손실 방지 에이전트의 로컬 포트입니다(테스트 모드 및 테이블 호출 확인). 기본값: 8095. 이 기기에서 해당 포트가 이미 사용 중인 경우에만 변경하세요."
+  admin_password:
+    name: "로컬 관리자 비밀번호"
+    description: "다음 시작 시 프린트 서버의 로컬 관리자 계정에 새 비밀번호를 설정하고(8자 이상) 모든 관리자 세션을 로그아웃합니다. 현재 비밀번호를 유지하려면 비워 두세요. 먼저 지점의 모든 계산대를 업데이트하세요. 기본 비밀번호로 로그인하는 이전 POS 빌드는 기기에서 직접 인쇄하게 됩니다."

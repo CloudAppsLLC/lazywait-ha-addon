@@ -11,3 +11,39 @@ configuration:
   LAZYWAIT_API_BASE:
     name: "Adres URL chmury LazyWait"
     description: "Adres API chmury LazyWait. Zachowaj wartość domyślną (https://apiv2.lazywait.com/v1), chyba że wsparcie LazyWait zaleci inaczej."
+  listen_orders:
+    name: "Automatyczny wydruk zamówień"
+    description: "Nasłuchuje nowych zamówień i automatycznie je drukuje. Wyłącz, aby przestać nasłuchiwać zamówień na tym urządzeniu."
+  listen_openings:
+    name: "Automatyczny wydruk otwarć kasy"
+    description: "Nasłuchuje otwarć kasy i automatycznie je drukuje. Wyłącz, jeśli ten oddział nie korzysta z otwarć."
+  listen_closings:
+    name: "Automatyczny wydruk zamknięć kasy"
+    description: "Nasłuchuje zamknięć kasy i automatycznie je drukuje. Wyłącz, jeśli ten oddział nie korzysta z zamknięć."
+  enable_camera_ai:
+    name: "Zezwalaj na AI kamer"
+    description: "Główny przełącznik AI kamer. Gdy jest włączony, AI kamer nadal włącza się lub wyłącza (domyślnie wyłączone) na stronie Funkcje serwera wydruku. Wyłącz, aby nigdy nie uruchamiała się na tym urządzeniu."
+  enable_live_webrtc:
+    name: "Bezpośredni podgląd kamer na żywo"
+    description: "Pozwala aplikacjom LazyWait odtwarzać obraz z kamer na żywo bezpośrednio z tego urządzenia (WebRTC peer-to-peer na porcie 18556 UDP/TCP). Chmura LazyWait jedynie pomaga obu stronom się połączyć; wideo nigdy przez nią nie przechodzi. Domyślnie włączone. Wyłącz, aby zatrzymać lokalną usługę wideo."
+  enable_loss_prevention:
+    name: "Zapobieganie stratom"
+    description: "Włącza agenta zapobiegania stratom (domyślnie wyłączony). Monitoruje encje Home Assistant przypisane w ERP (roleta, drzwi, zamek, alarm, oświetlenie, ruch, szuflada kasowa) i wysyła podpisane wyniki do chmury LazyWait. Wymaga tokena dostępu Home Assistant. Tylko aarch64."
+  ha_url:
+    name: "Adres URL Home Assistant"
+    description: "Adres Home Assistant dla agenta zapobiegania stratom. Pozostaw puste, chyba że Home Assistant działa na innym hoście (domyślnie: http://127.0.0.1:8123)."
+  ha_token:
+    name: "Token dostępu Home Assistant"
+    description: "Długoterminowy token dostępu użytkownika z uprawnieniami administratora w Home Assistant, używany przez agenta zapobiegania stratom (Profil → Bezpieczeństwo → Tokeny dostępu długoterminowego)."
+  isapi_username:
+    name: "Nazwa użytkownika kamery / NVR"
+    description: "Konto kamery lub rejestratora NVR (Hikvision ISAPI) do zdjęć dowodowych, odtwarzania z NVR i liczenia osób przez kamerę w zapobieganiu stratom. Pozostaje na tym urządzeniu. Pozostaw puste, aby analizować tylko strumienie pomocnicze kamer."
+  isapi_password:
+    name: "Hasło kamery / NVR"
+    description: "Hasło powyższego konta kamery / NVR. Pozostaje na tym urządzeniu i nigdy nie jest wysyłane do LazyWait."
+  lp_agent_port:
+    name: "Port agenta zapobiegania stratom"
+    description: "Lokalny port agenta zapobiegania stratom (tryb testowy i potwierdzenia wezwań ze stolików). Domyślnie: 8095. Zmień go tylko, jeśli ten port jest już zajęty na tym urządzeniu."
+  admin_password:
+    name: "Hasło lokalnego administratora"
+    description: "Ustawia nowe hasło lokalnego konta administratora serwera wydruku przy następnym uruchomieniu (co najmniej 8 znaków) i wylogowuje wszystkie sesje administratora. Pozostaw puste, aby zachować obecne hasło. Najpierw zaktualizuj wszystkie kasy w oddziale: starsze wersje POS logujące się domyślnym hasłem będą wtedy drukować bezpośrednio z urządzenia."

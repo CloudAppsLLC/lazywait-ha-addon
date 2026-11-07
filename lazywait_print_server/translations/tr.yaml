@@ -11,3 +11,39 @@ configuration:
   LAZYWAIT_API_BASE:
     name: "LazyWait bulut URL'si"
     description: "LazyWait bulut API adresi. LazyWait desteği aksini söylemedikçe varsayılanı (https://apiv2.lazywait.com/v1) koruyun."
+  listen_orders:
+    name: "Siparişleri otomatik yazdır"
+    description: "Yeni siparişleri dinler ve otomatik olarak yazdırır. Bu cihazda siparişleri dinlemeyi durdurmak için kapatın."
+  listen_openings:
+    name: "Kasa açılışlarını otomatik yazdır"
+    description: "Kasa açılışlarını dinler ve otomatik olarak yazdırır. Bu şube açılışları kullanmıyorsa kapatın."
+  listen_closings:
+    name: "Kasa kapanışlarını otomatik yazdır"
+    description: "Kasa kapanışlarını dinler ve otomatik olarak yazdırır. Bu şube kapanışları kullanmıyorsa kapatın."
+  enable_camera_ai:
+    name: "Kamera yapay zekâsına izin ver"
+    description: "Kamera yapay zekâsının ana anahtarı. Açıkken kamera yapay zekâsı yine yazdırma sunucusunun Özellikler sayfasından açılıp kapatılır (varsayılan olarak kapalı). Bu cihazda hiç başlamaması için kapatın."
+  enable_live_webrtc:
+    name: "Doğrudan canlı kamera görüntüsü"
+    description: "LazyWait uygulamalarının canlı kamera görüntüsünü doğrudan bu cihazdan oynatmasını sağlar (18556 UDP/TCP bağlantı noktasında eşler arası WebRTC). LazyWait bulutu yalnızca iki tarafın bağlanmasına yardımcı olur; video asla buluttan geçmez. Varsayılan olarak açıktır. Yerel video hizmetini durdurmak için kapatın."
+  enable_loss_prevention:
+    name: "Kayıp Önleme"
+    description: "Kayıp Önleme ajanını açar (varsayılan olarak kapalı). ERP'de eşlenen Home Assistant varlıklarını (kepenk, kapı, kilit, alarm, ışıklar, hareket, para çekmecesi) izler ve imzalı sonuçları LazyWait bulutuna gönderir. Bir Home Assistant erişim belirteci gerekir. Yalnızca aarch64."
+  ha_url:
+    name: "Home Assistant URL'si"
+    description: "Kayıp Önleme ajanı için Home Assistant adresi. Home Assistant başka bir ana bilgisayarda çalışmıyorsa boş bırakın (varsayılan: http://127.0.0.1:8123)."
+  ha_token:
+    name: "Home Assistant erişim belirteci"
+    description: "Kayıp Önleme ajanının kullandığı, bir Home Assistant yönetici kullanıcısına ait uzun ömürlü erişim belirteci (Profil → Güvenlik → Uzun ömürlü erişim belirteçleri)."
+  isapi_username:
+    name: "Kamera / NVR kullanıcı adı"
+    description: "Kayıp Önleme kanıt görüntüleri, NVR oynatma ve kamera üzerinde kişi sayımı için kamera veya NVR hesabı (Hikvision ISAPI). Bu cihazda kalır. Yalnızca kameraların alt akışlarını analiz etmek için boş bırakın."
+  isapi_password:
+    name: "Kamera / NVR parolası"
+    description: "Yukarıdaki kamera / NVR hesabının parolası. Bu cihazda kalır ve asla LazyWait'e gönderilmez."
+  lp_agent_port:
+    name: "Kayıp Önleme ajanı bağlantı noktası"
+    description: "Kayıp Önleme ajanının yerel bağlantı noktası (test modu ve masa çağrısı onayları). Varsayılan: 8095. Yalnızca bu bağlantı noktası bu cihazda zaten kullanılıyorsa değiştirin."
+  admin_password:
+    name: "Yerel yönetici parolası"
+    description: "Bir sonraki başlatmada yazdırma sunucusunun yerel yönetici hesabına yeni bir parola atar (en az 8 karakter) ve tüm yönetici oturumlarını kapatır. Mevcut parolayı korumak için boş bırakın. Önce şubedeki tüm kasaları güncelleyin: varsayılan parolayla oturum açan eski POS sürümleri bundan sonra doğrudan cihazdan yazdırır."

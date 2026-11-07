@@ -11,3 +11,39 @@ configuration:
   LAZYWAIT_API_BASE:
     name: "LazyWait cloud URL"
     description: "The LazyWait cloud API address. Keep the default (https://apiv2.lazywait.com/v1) unless LazyWait support tells you otherwise."
+  listen_orders:
+    name: "Auto-print orders"
+    description: "Listen for new orders and print them automatically. Turn off to stop listening for orders on this device."
+  listen_openings:
+    name: "Auto-print cashier openings"
+    description: "Listen for cashier openings and print them automatically. Turn off if this branch doesn't use openings."
+  listen_closings:
+    name: "Auto-print cashier closings"
+    description: "Listen for cashier closings and print them automatically. Turn off if this branch doesn't use closings."
+  enable_camera_ai:
+    name: "Allow camera AI"
+    description: "Master switch for camera AI. When on, camera AI is still turned on or off (default off) from the print server's Features page. Turn off to stop it from ever starting on this device."
+  enable_live_webrtc:
+    name: "Direct live camera view"
+    description: "Lets the LazyWait apps play live camera video straight from this device (peer-to-peer WebRTC on port 18556 UDP/TCP). The LazyWait cloud only helps the two sides connect; the video never passes through it. On by default. Turn off to stop the local video service."
+  enable_loss_prevention:
+    name: "Loss Prevention"
+    description: "Turns on the Loss Prevention agent (off by default). It watches the Home Assistant entities mapped in the ERP (shutter, door, lock, alarm, lights, motion, cash drawer) and sends signed results to the LazyWait cloud. Needs a Home Assistant access token. aarch64 only."
+  ha_url:
+    name: "Home Assistant URL"
+    description: "Home Assistant's address for the Loss Prevention agent. Leave blank unless Home Assistant runs on another host (default: http://127.0.0.1:8123)."
+  ha_token:
+    name: "Home Assistant access token"
+    description: "A long-lived access token of a Home Assistant admin user, used by the Loss Prevention agent (Profile → Security → Long-lived access tokens)."
+  isapi_username:
+    name: "Camera / NVR username"
+    description: "The camera or NVR account (Hikvision ISAPI) for Loss Prevention evidence snapshots, NVR playback and on-camera people counting. Stays on this device. Leave blank to analyse the cameras' sub-streams only."
+  isapi_password:
+    name: "Camera / NVR password"
+    description: "The password of the camera / NVR account above. Stays on this device and is never sent to LazyWait."
+  lp_agent_port:
+    name: "Loss Prevention agent port"
+    description: "The local port of the Loss Prevention agent (test mode and table-call acknowledgements). Default: 8095. Change it only if that port is already taken on this device."
+  admin_password:
+    name: "Local admin password"
+    description: "Sets a new password for the print server's local admin account on the next start (8+ characters) and signs out every admin session. Leave blank to keep the current password. Update every till in the branch first: older POS builds that log in with the default password will then print from the device instead."

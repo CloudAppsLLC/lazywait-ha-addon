@@ -11,3 +11,39 @@ configuration:
   LAZYWAIT_API_BASE:
     name: "LazyWait 云端 URL"
     description: "LazyWait 云端 API 地址。除非 LazyWait 支持团队另有说明，否则请保留默认值（https://apiv2.lazywait.com/v1）。"
+  listen_orders:
+    name: "自动打印订单"
+    description: "监听新订单并自动打印。关闭后，此设备将不再监听订单。"
+  listen_openings:
+    name: "自动打印收银开班"
+    description: "监听收银开班并自动打印。如果此门店不使用开班，请关闭。"
+  listen_closings:
+    name: "自动打印收银结账"
+    description: "监听收银结账并自动打印。如果此门店不使用结账，请关闭。"
+  enable_camera_ai:
+    name: "允许摄像头 AI"
+    description: "摄像头 AI 的总开关。开启时，摄像头 AI 仍需在打印服务器的“功能”页面中开启或关闭（默认关闭）。关闭后，它将永远不会在此设备上启动。"
+  enable_live_webrtc:
+    name: "摄像头直连实时查看"
+    description: "允许 LazyWait 应用直接从本设备播放摄像头实时画面（端口 18556 UDP/TCP 上的点对点 WebRTC）。LazyWait 云端只协助双方建立连接，视频从不经过云端。默认开启。关闭后将停止本地视频服务。"
+  enable_loss_prevention:
+    name: "防损"
+    description: "开启防损代理（默认关闭）。它监控在 ERP 中映射的 Home Assistant 实体（卷帘门、门、门锁、警报、灯光、移动侦测、钱箱），并将签名后的结果发送到 LazyWait 云端。需要 Home Assistant 访问令牌。仅限 aarch64。"
+  ha_url:
+    name: "Home Assistant 地址"
+    description: "防损代理使用的 Home Assistant 地址。除非 Home Assistant 运行在其他主机上，否则请留空（默认：http://127.0.0.1:8123）。"
+  ha_token:
+    name: "Home Assistant 访问令牌"
+    description: "Home Assistant 管理员用户的长期访问令牌，供防损代理使用（个人资料 → 安全 → 长期访问令牌）。"
+  isapi_username:
+    name: "摄像头 / NVR 用户名"
+    description: "用于防损取证快照、NVR 回放和摄像头端人数统计的摄像头或 NVR 账号（Hikvision ISAPI）。仅保存在本设备上。留空则只分析摄像头的子码流。"
+  isapi_password:
+    name: "摄像头 / NVR 密码"
+    description: "上述摄像头 / NVR 账号的密码。仅保存在本设备上，绝不会发送给 LazyWait。"
+  lp_agent_port:
+    name: "防损代理端口"
+    description: "防损代理的本地端口（测试模式和餐桌呼叫确认）。默认：8095。仅当该端口在本设备上已被占用时才需更改。"
+  admin_password:
+    name: "本地管理员密码"
+    description: "在下次启动时为打印服务器的本地管理员账号设置新密码（至少 8 个字符），并注销所有管理员会话。留空则保留当前密码。请先更新本门店的所有收银台：仍使用默认密码登录的旧版 POS 之后将改为由设备本身直接打印。"

@@ -11,3 +11,39 @@ configuration:
   LAZYWAIT_API_BASE:
     name: "LazyWait クラウド URL"
     description: "LazyWait クラウド API のアドレス。LazyWait サポートから指示がない限り、既定値 (https://apiv2.lazywait.com/v1) のままにしてください。"
+  listen_orders:
+    name: "注文を自動印刷"
+    description: "新しい注文を監視して自動的に印刷します。このデバイスで注文の監視を停止するにはオフにします。"
+  listen_openings:
+    name: "レジ開けを自動印刷"
+    description: "レジ開けを監視して自動的に印刷します。この店舗でレジ開けを使用しない場合はオフにします。"
+  listen_closings:
+    name: "レジ締めを自動印刷"
+    description: "レジ締めを監視して自動的に印刷します。この店舗でレジ締めを使用しない場合はオフにします。"
+  enable_camera_ai:
+    name: "カメラ AI を許可"
+    description: "カメラ AI のマスタースイッチ。オンの場合でも、カメラ AI のオン/オフはプリントサーバーの「機能」ページで切り替えます (既定はオフ)。このデバイスで一切起動させない場合はオフにします。"
+  enable_live_webrtc:
+    name: "カメラのダイレクト ライブ表示"
+    description: "LazyWait アプリがこのデバイスから直接カメラのライブ映像を再生できるようにします (ポート 18556 UDP/TCP のピアツーピア WebRTC)。LazyWait クラウドは両者の接続を手助けするだけで、映像がクラウドを経由することはありません。既定はオン。ローカルの映像サービスを停止するにはオフにします。"
+  enable_loss_prevention:
+    name: "ロスプリベンション"
+    description: "ロスプリベンション エージェントを有効にします (既定ではオフ)。ERP で割り当てた Home Assistant のエンティティ (シャッター、ドア、錠、警報、照明、人感、キャッシュドロア) を監視し、署名付きの結果を LazyWait クラウドに送信します。Home Assistant のアクセストークンが必要です。aarch64 のみ。"
+  ha_url:
+    name: "Home Assistant の URL"
+    description: "ロスプリベンション エージェントが使う Home Assistant のアドレス。Home Assistant が別のホストで動作している場合を除き空欄のままにします (既定値: http://127.0.0.1:8123)。"
+  ha_token:
+    name: "Home Assistant アクセストークン"
+    description: "Home Assistant 管理者ユーザーの長期アクセストークン。ロスプリベンション エージェントが使用します (プロフィール → セキュリティ → 長期アクセストークン)。"
+  isapi_username:
+    name: "カメラ / NVR のユーザー名"
+    description: "ロスプリベンションの証拠スナップショット、NVR 再生、カメラ内の人数カウントに使うカメラまたは NVR のアカウント (Hikvision ISAPI)。このデバイス内にのみ保存されます。カメラのサブストリームだけを解析する場合は空欄のままにします。"
+  isapi_password:
+    name: "カメラ / NVR のパスワード"
+    description: "上記のカメラ / NVR アカウントのパスワード。このデバイス内にのみ保存され、LazyWait に送信されることはありません。"
+  lp_agent_port:
+    name: "ロスプリベンション エージェントのポート"
+    description: "ロスプリベンション エージェントのローカルポート (テストモードとテーブル呼び出しの応答)。既定値: 8095。このデバイスでそのポートが既に使われている場合にのみ変更してください。"
+  admin_password:
+    name: "ローカル管理者パスワード"
+    description: "次回起動時にプリントサーバーのローカル管理者アカウントへ新しいパスワードを設定し (8 文字以上)、すべての管理者セッションをサインアウトします。現在のパスワードを維持する場合は空欄のままにします。先に支店のすべてのレジを更新してください。既定のパスワードでログインする古い POS ビルドは、端末から直接印刷するようになります。"

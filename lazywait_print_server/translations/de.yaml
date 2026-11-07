@@ -11,3 +11,39 @@ configuration:
   LAZYWAIT_API_BASE:
     name: "LazyWait-Cloud-URL"
     description: "Die API-Adresse der LazyWait-Cloud. Behalte den Standardwert (https://apiv2.lazywait.com/v1) bei, sofern der LazyWait-Support nichts anderes sagt."
+  listen_orders:
+    name: "Bestellungen automatisch drucken"
+    description: "Wartet auf neue Bestellungen und druckt sie automatisch. Ausschalten, um auf diesem Gerät nicht mehr auf Bestellungen zu warten."
+  listen_openings:
+    name: "Kasseneröffnungen automatisch drucken"
+    description: "Wartet auf Kasseneröffnungen und druckt sie automatisch. Ausschalten, wenn diese Filiale keine Kasseneröffnungen nutzt."
+  listen_closings:
+    name: "Kassenabschlüsse automatisch drucken"
+    description: "Wartet auf Kassenabschlüsse und druckt sie automatisch. Ausschalten, wenn diese Filiale keine Kassenabschlüsse nutzt."
+  enable_camera_ai:
+    name: "Kamera-KI erlauben"
+    description: "Hauptschalter für die Kamera-KI. Wenn eingeschaltet, wird die Kamera-KI weiterhin auf der Seite „Funktionen“ des Druckservers ein- oder ausgeschaltet (standardmäßig aus). Ausschalten, damit sie auf diesem Gerät nie startet."
+  enable_live_webrtc:
+    name: "Direkte Live-Kameraansicht"
+    description: "Ermöglicht den LazyWait-Apps, Live-Kamerabilder direkt von diesem Gerät abzuspielen (Peer-to-Peer-WebRTC auf Port 18556 UDP/TCP). Die LazyWait-Cloud hilft nur beim Verbindungsaufbau der beiden Seiten; das Video läuft nie über sie. Standardmäßig eingeschaltet. Ausschalten, um den lokalen Videodienst zu stoppen."
+  enable_loss_prevention:
+    name: "Verlustprävention"
+    description: "Schaltet den Agenten für Verlustprävention ein (standardmäßig aus). Er überwacht die im ERP zugeordneten Home-Assistant-Entitäten (Rolltor, Tür, Schloss, Alarm, Licht, Bewegung, Kassenschublade) und sendet signierte Ergebnisse an die LazyWait-Cloud. Benötigt ein Home-Assistant-Zugriffstoken. Nur aarch64."
+  ha_url:
+    name: "Home-Assistant-URL"
+    description: "Die Adresse von Home Assistant für den Agenten für Verlustprävention. Leer lassen, außer Home Assistant läuft auf einem anderen Host (Standard: http://127.0.0.1:8123)."
+  ha_token:
+    name: "Home-Assistant-Zugriffstoken"
+    description: "Ein langlebiges Zugriffstoken eines Home-Assistant-Administrators, das der Agent für Verlustprävention verwendet (Profil → Sicherheit → Langlebige Zugriffstoken)."
+  isapi_username:
+    name: "Kamera-/NVR-Benutzername"
+    description: "Das Kamera- oder NVR-Konto (Hikvision ISAPI) für Beweis-Schnappschüsse, NVR-Wiedergabe und Personenzählung in der Kamera bei der Verlustprävention. Bleibt auf diesem Gerät. Leer lassen, um nur die Substreams der Kameras zu analysieren."
+  isapi_password:
+    name: "Kamera-/NVR-Passwort"
+    description: "Das Passwort des obigen Kamera-/NVR-Kontos. Bleibt auf diesem Gerät und wird nie an LazyWait gesendet."
+  lp_agent_port:
+    name: "Port des Verlustpräventions-Agenten"
+    description: "Der lokale Port des Agenten für Verlustprävention (Testmodus und Bestätigungen von Tischrufen). Standard: 8095. Nur ändern, wenn der Port auf diesem Gerät bereits belegt ist."
+  admin_password:
+    name: "Lokales Admin-Passwort"
+    description: "Setzt beim nächsten Start ein neues Passwort für das lokale Admin-Konto des Druckservers (mindestens 8 Zeichen) und meldet alle Admin-Sitzungen ab. Leer lassen, um das aktuelle Passwort zu behalten. Aktualisiere zuerst alle Kassen der Filiale: Ältere POS-Versionen, die sich mit dem Standardpasswort anmelden, drucken dann direkt vom Gerät."

@@ -11,3 +11,39 @@ configuration:
   LAZYWAIT_API_BASE:
     name: "URL du cloud LazyWait"
     description: "L'adresse de l'API du cloud LazyWait. Conservez la valeur par défaut (https://apiv2.lazywait.com/v1) sauf indication contraire du support LazyWait."
+  listen_orders:
+    name: "Impression automatique des commandes"
+    description: "Surveille les nouvelles commandes et les imprime automatiquement. Désactivez pour ne plus surveiller les commandes sur cet appareil."
+  listen_openings:
+    name: "Impression automatique des ouvertures de caisse"
+    description: "Surveille les ouvertures de caisse et les imprime automatiquement. Désactivez si cette succursale n'utilise pas les ouvertures."
+  listen_closings:
+    name: "Impression automatique des clôtures de caisse"
+    description: "Surveille les clôtures de caisse et les imprime automatiquement. Désactivez si cette succursale n'utilise pas les clôtures."
+  enable_camera_ai:
+    name: "Autoriser l'IA des caméras"
+    description: "Interrupteur principal de l'IA des caméras. Lorsqu'il est activé, l'IA des caméras reste activée ou désactivée (désactivée par défaut) depuis la page Fonctionnalités du serveur d'impression. Désactivez-le pour qu'elle ne démarre jamais sur cet appareil."
+  enable_live_webrtc:
+    name: "Vue directe des caméras en direct"
+    description: "Permet aux applications LazyWait de lire la vidéo en direct des caméras directement depuis cet appareil (WebRTC pair à pair sur le port 18556 UDP/TCP). Le cloud LazyWait aide seulement les deux côtés à se connecter ; la vidéo ne passe jamais par lui. Activé par défaut. Désactivez-le pour arrêter le service vidéo local."
+  enable_loss_prevention:
+    name: "Prévention des pertes"
+    description: "Active l'agent de prévention des pertes (désactivé par défaut). Il surveille les entités Home Assistant associées dans l'ERP (rideau métallique, porte, serrure, alarme, éclairage, mouvement, tiroir-caisse) et envoie des résultats signés au cloud LazyWait. Nécessite un jeton d'accès Home Assistant. aarch64 uniquement."
+  ha_url:
+    name: "URL de Home Assistant"
+    description: "L'adresse de Home Assistant pour l'agent de prévention des pertes. Laissez vide sauf si Home Assistant tourne sur un autre hôte (par défaut : http://127.0.0.1:8123)."
+  ha_token:
+    name: "Jeton d'accès Home Assistant"
+    description: "Un jeton d'accès longue durée d'un utilisateur administrateur de Home Assistant, utilisé par l'agent de prévention des pertes (Profil → Sécurité → Jetons d'accès longue durée)."
+  isapi_username:
+    name: "Identifiant caméra / NVR"
+    description: "Le compte de la caméra ou du NVR (Hikvision ISAPI) pour les captures de preuve, la lecture NVR et le comptage de personnes par la caméra pour la prévention des pertes. Reste sur cet appareil. Laissez vide pour n'analyser que les sous-flux des caméras."
+  isapi_password:
+    name: "Mot de passe caméra / NVR"
+    description: "Le mot de passe du compte caméra / NVR ci-dessus. Reste sur cet appareil et n'est jamais envoyé à LazyWait."
+  lp_agent_port:
+    name: "Port de l'agent de prévention des pertes"
+    description: "Le port local de l'agent de prévention des pertes (mode test et accusés de réception des appels de table). Par défaut : 8095. Ne le modifiez que si ce port est déjà utilisé sur cet appareil."
+  admin_password:
+    name: "Mot de passe administrateur local"
+    description: "Définit un nouveau mot de passe pour le compte administrateur local du serveur d'impression au prochain démarrage (8 caractères minimum) et ferme toutes les sessions administrateur. Laissez vide pour conserver le mot de passe actuel. Mettez d'abord à jour toutes les caisses de l'établissement : les anciennes versions du POS qui se connectent avec le mot de passe par défaut imprimeront alors depuis l'appareil lui-même."

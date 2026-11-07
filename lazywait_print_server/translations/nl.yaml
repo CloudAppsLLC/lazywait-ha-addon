@@ -11,3 +11,39 @@ configuration:
   LAZYWAIT_API_BASE:
     name: "LazyWait-cloud-URL"
     description: "Het API-adres van de LazyWait-cloud. Behoud de standaardwaarde (https://apiv2.lazywait.com/v1), tenzij LazyWait-support iets anders aangeeft."
+  listen_orders:
+    name: "Bestellingen automatisch afdrukken"
+    description: "Luistert naar nieuwe bestellingen en drukt ze automatisch af. Schakel uit om op dit apparaat niet langer naar bestellingen te luisteren."
+  listen_openings:
+    name: "Kassaopeningen automatisch afdrukken"
+    description: "Luistert naar kassaopeningen en drukt ze automatisch af. Schakel uit als deze vestiging geen openingen gebruikt."
+  listen_closings:
+    name: "Kassa-afsluitingen automatisch afdrukken"
+    description: "Luistert naar kassa-afsluitingen en drukt ze automatisch af. Schakel uit als deze vestiging geen afsluitingen gebruikt."
+  enable_camera_ai:
+    name: "Camera-AI toestaan"
+    description: "Hoofdschakelaar voor camera-AI. Als deze aan staat, wordt camera-AI nog steeds aan- of uitgezet (standaard uit) via de pagina Functies van de printserver. Schakel uit om te voorkomen dat deze ooit op dit apparaat start."
+  enable_live_webrtc:
+    name: "Directe live-camerabeelden"
+    description: "Laat de LazyWait-apps live camerabeelden rechtstreeks vanaf dit apparaat afspelen (peer-to-peer WebRTC op poort 18556 UDP/TCP). De LazyWait-cloud helpt alleen beide kanten verbinding te maken; de video gaat er nooit doorheen. Standaard aan. Zet uit om de lokale videodienst te stoppen."
+  enable_loss_prevention:
+    name: "Verliespreventie"
+    description: "Zet de verliespreventie-agent aan (standaard uit). Die bewaakt de Home Assistant-entiteiten die in het ERP zijn gekoppeld (rolluik, deur, slot, alarm, verlichting, beweging, kassalade) en stuurt ondertekende resultaten naar de LazyWait-cloud. Vereist een Home Assistant-toegangstoken. Alleen aarch64."
+  ha_url:
+    name: "Home Assistant-URL"
+    description: "Het adres van Home Assistant voor de verliespreventie-agent. Laat leeg, tenzij Home Assistant op een andere host draait (standaard: http://127.0.0.1:8123)."
+  ha_token:
+    name: "Home Assistant-toegangstoken"
+    description: "Een langlevend toegangstoken van een beheerder in Home Assistant, gebruikt door de verliespreventie-agent (Profiel → Beveiliging → Langlevende toegangstokens)."
+  isapi_username:
+    name: "Gebruikersnaam camera / NVR"
+    description: "Het camera- of NVR-account (Hikvision ISAPI) voor bewijs-snapshots, NVR-weergave en het tellen van personen op de camera bij verliespreventie. Blijft op dit apparaat. Laat leeg om alleen de substreams van de camera's te analyseren."
+  isapi_password:
+    name: "Wachtwoord camera / NVR"
+    description: "Het wachtwoord van het camera- / NVR-account hierboven. Blijft op dit apparaat en wordt nooit naar LazyWait gestuurd."
+  lp_agent_port:
+    name: "Poort verliespreventie-agent"
+    description: "De lokale poort van de verliespreventie-agent (testmodus en bevestigingen van tafeloproepen). Standaard: 8095. Wijzig deze alleen als die poort op dit apparaat al in gebruik is."
+  admin_password:
+    name: "Lokaal beheerderswachtwoord"
+    description: "Stelt bij de volgende start een nieuw wachtwoord in voor het lokale beheerdersaccount van de printserver (minimaal 8 tekens) en meldt alle beheerderssessies af. Laat leeg om het huidige wachtwoord te houden. Werk eerst alle kassa's van de vestiging bij: oudere POS-versies die inloggen met het standaardwachtwoord printen dan rechtstreeks vanaf het apparaat."

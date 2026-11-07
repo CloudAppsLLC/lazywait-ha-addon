@@ -46,17 +46,94 @@ map:
 # installing a NEW bundled integration version (no manual restart needed).
 
 options:
+  # TIMEZONE — receipts the print server builds itself (online-order auto-print,
+  # older POS builds) print the order time in THIS PROCESS's timezone; the
+  # PrintingV2 scene has no per-branch timezone. The Supervisor injects Home
+  # Assistant's own system timezone (Settings -> System -> General -> Time zone)
+  # as TZ, and run.sh does not currently export this option, so HA's timezone is
+  # what is applied. Partners OUTSIDE Saudi Arabia must set HA's timezone (and,
+  # to keep the two in agreement, this option) to the store's zone, e.g.
+  # Asia/Amman (Jordan) or Asia/Yerevan (Armenia) — otherwise a fiscal receipt
+  # prints Riyadh time beside the register's own timestamp.
   TZ: "Asia/Riyadh"
   PORT: 80
-  LAN_IP: ""
+  LAN_IP: ""   # مثال: "192.168.100.150"
   LAZYWAIT_API_BASE: "https://apiv2.lazywait.com/v1"
+  # Per-collection realtime listeners (auto-print triggers). Turn a collection
+  # OFF to stop the print server from subscribing to it — useful when a branch
+  # doesn't use openings/closings, or to stop a listener whose Supabase channel
+  # keeps flapping. Default: all ON.
+  listen_orders: true
+  listen_openings: true
+  listen_closings: true
+  # Camera-AI HARD kill switch. Camera-AI is normally controlled at RUNTIME from
+  # the print server UI (Features page) and is DEFAULT OFF there, so leaving this
+  # `true` starts the supervisor idle (zero CPU until you enable AI in the UI).
+  # Set to `false` to prevent the inference supervisor from starting AT ALL —
+  # for a box that must never run detection regardless of the UI. Person/pose
+  # detection across many cameras on a Pi CPU (no accelerator) is expensive; a
+  # full NVR can peg the box, so enable cameras deliberately in the UI.
+  enable_camera_ai: true
+  # DIRECT LIVE CAMERA VIEW (peer-to-peer WebRTC). ON by default. Runs go2rtc
+  # (pinned + SHA-256-verified in the Dockerfile) so the LazyWait apps play a
+  # camera straight from this box; the LazyWait cloud only relays the
+  # connection setup and the video never passes through it. Viewers on the
+  # store LAN connect to port 18556 UDP/TCP on this host directly; viewers
+  # elsewhere through a Cloudflare TURN relay they bring themselves (this box
+  # needs outbound UDP to stun.cloudflare.com:3478 and to the relay). go2rtc's
+  # API listens on 127.0.0.1:11985 only, behind a per-start random password
+  # the LazyWait integration reads from <HA config>/.lazywait_go2rtc.json.
+  # No new port mapping is needed (host_network). Set to false to not start
+  # go2rtc at all; the integration then reports direct view unavailable.
+  enable_live_webrtc: true
+  # LOSS PREVENTION agent (lp-agent). OFF by default. When on, it watches the
+  # Home Assistant entities the ERP maps to store signals (shutter, door, lock,
+  # alarm, lights, motion, cash drawer) and sends signed, batched results to the
+  # LazyWait cloud; nothing else leaves the store. It needs ha_token: a
+  # long-lived access token of an HA ADMIN user (HA -> Profile -> Security ->
+  # Long-lived access tokens). Leave ha_url empty unless HA is not on this host
+  # (default http://127.0.0.1:8123). Its data lives in this add-on's /data, so
+  # run HA OS from an SSD. Needs the LazyWait integration with Loss Prevention
+  # (installed by this add-on; restart HA after an update). aarch64 only.
+  enable_loss_prevention: false
+  # Loss Prevention VISION. The camera / NVR account (Hikvision ISAPI) the agent
+  # uses for high-resolution evidence snapshots, NVR playback clips and
+  # on-camera people counting. Stays on this box: passed to the agent only,
+  # never logged, never sent to LazyWait. Leave empty to analyse the cameras'
+  # sub-streams only. The agent analyses each camera's SUB-stream (set it at the
+  # camera to 640x360, 5-10 FPS, smart codec off) and keeps ~25 s of each
+  # counter camera in RAM (/dev/shm, ~3 MB per camera) for evidence clips.
+  isapi_username: ""
+  isapi_password: ""
+  # Loopback port of the agent's local endpoints: edge test mode (opened from
+  # this add-on's page at /lp-test/) and the tills' table-call acknowledgements.
+  # Change it only if 8095 is taken on this host.
+  lp_agent_port: 8095
+  # LOCAL ADMIN PASSWORD (optional, schema-only: shown under "unused optional
+  # configuration options"). Empty keeps the device's current password — every
+  # install still starts on the shared factory default, and the add-on logs a
+  # SECURITY warning on each start until it is changed. Set it (8+ characters)
+  # and restart: the local `admin` account switches to it once and every admin
+  # session token is revoked (tills' pairing routing tokens are kept). Tills on
+  # POS builds that still log in with the default then print from the device
+  # instead, so update every till in the branch FIRST. Clearing it later does
+  # not change the password back.
+  # admin_password: ""
 
-# No Supabase keys here, by design. The device gets the project URL + the PUBLIC
-# anon key from the cloud during PAIRING (enter the dashboard pairing code), so
-# you paste nothing and no key sits in the add-on options. The service-role key
-# is never placed on the device.
 schema:
   TZ: str
   PORT: int
   LAN_IP: str?
   LAZYWAIT_API_BASE: str?
+  listen_orders: bool?
+  listen_openings: bool?
+  listen_closings: bool?
+  enable_camera_ai: bool?
+  enable_live_webrtc: bool?
+  enable_loss_prevention: bool?
+  ha_url: url?
+  ha_token: password?
+  isapi_username: str?
+  isapi_password: password?
+  lp_agent_port: port?
+  admin_password: password?

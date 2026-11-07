@@ -11,3 +11,39 @@ configuration:
   LAZYWAIT_API_BASE:
     name: "URL cloud LazyWait"
     description: "Alamat API cloud LazyWait. Pertahankan nilai bawaan (https://apiv2.lazywait.com/v1) kecuali dukungan LazyWait meminta lain."
+  listen_orders:
+    name: "Cetak pesanan otomatis"
+    description: "Memantau pesanan baru dan mencetaknya secara otomatis. Matikan untuk berhenti memantau pesanan di perangkat ini."
+  listen_openings:
+    name: "Cetak pembukaan kasir otomatis"
+    description: "Memantau pembukaan kasir dan mencetaknya secara otomatis. Matikan jika cabang ini tidak menggunakan pembukaan."
+  listen_closings:
+    name: "Cetak penutupan kasir otomatis"
+    description: "Memantau penutupan kasir dan mencetaknya secara otomatis. Matikan jika cabang ini tidak menggunakan penutupan."
+  enable_camera_ai:
+    name: "Izinkan AI kamera"
+    description: "Sakelar utama AI kamera. Saat aktif, AI kamera tetap dinyalakan atau dimatikan (bawaan mati) dari halaman Fitur di server cetak. Matikan agar AI kamera tidak pernah berjalan di perangkat ini."
+  enable_live_webrtc:
+    name: "Tampilan kamera langsung tanpa perantara"
+    description: "Memungkinkan aplikasi LazyWait memutar video kamera langsung dari perangkat ini (WebRTC peer-to-peer di port 18556 UDP/TCP). Cloud LazyWait hanya membantu kedua sisi terhubung; video tidak pernah melewatinya. Bawaan aktif. Matikan untuk menghentikan layanan video lokal."
+  enable_loss_prevention:
+    name: "Pencegahan Kerugian"
+    description: "Mengaktifkan agen Pencegahan Kerugian (nonaktif secara bawaan). Agen ini memantau entitas Home Assistant yang dipetakan di ERP (rolling door, pintu, kunci, alarm, lampu, gerakan, laci kas) dan mengirim hasil yang ditandatangani ke cloud LazyWait. Memerlukan token akses Home Assistant. Hanya aarch64."
+  ha_url:
+    name: "URL Home Assistant"
+    description: "Alamat Home Assistant untuk agen Pencegahan Kerugian. Biarkan kosong kecuali Home Assistant berjalan di host lain (bawaan: http://127.0.0.1:8123)."
+  ha_token:
+    name: "Token akses Home Assistant"
+    description: "Token akses berumur panjang milik pengguna admin Home Assistant, dipakai oleh agen Pencegahan Kerugian (Profil → Keamanan → Token akses berumur panjang)."
+  isapi_username:
+    name: "Nama pengguna kamera / NVR"
+    description: "Akun kamera atau NVR (Hikvision ISAPI) untuk snapshot bukti, pemutaran NVR, dan penghitungan orang di kamera untuk Pencegahan Kerugian. Tetap di perangkat ini. Biarkan kosong untuk hanya menganalisis sub-stream kamera."
+  isapi_password:
+    name: "Kata sandi kamera / NVR"
+    description: "Kata sandi akun kamera / NVR di atas. Tetap di perangkat ini dan tidak pernah dikirim ke LazyWait."
+  lp_agent_port:
+    name: "Port agen Pencegahan Kerugian"
+    description: "Port lokal agen Pencegahan Kerugian (mode uji dan konfirmasi panggilan meja). Bawaan: 8095. Ubah hanya jika port tersebut sudah dipakai di perangkat ini."
+  admin_password:
+    name: "Kata sandi admin lokal"
+    description: "Menetapkan kata sandi baru untuk akun admin lokal server cetak saat dijalankan berikutnya (minimal 8 karakter) dan mengeluarkan semua sesi admin. Biarkan kosong untuk mempertahankan kata sandi saat ini. Perbarui dulu semua kasir di cabang: build POS lama yang masuk dengan kata sandi bawaan akan mencetak langsung dari perangkat."

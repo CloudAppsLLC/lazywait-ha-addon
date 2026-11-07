@@ -11,3 +11,39 @@ configuration:
   LAZYWAIT_API_BASE:
     name: "LazyWait 雲端 URL"
     description: "LazyWait 雲端 API 位址。除非 LazyWait 支援團隊另有指示，否則請保留預設值（https://apiv2.lazywait.com/v1）。"
+  listen_orders:
+    name: "自動列印訂單"
+    description: "監聽新訂單並自動列印。關閉後，此裝置將不再監聽訂單。"
+  listen_openings:
+    name: "自動列印收銀開班"
+    description: "監聽收銀開班並自動列印。如果此門市不使用開班，請關閉。"
+  listen_closings:
+    name: "自動列印收銀結帳"
+    description: "監聽收銀結帳並自動列印。如果此門市不使用結帳，請關閉。"
+  enable_camera_ai:
+    name: "允許攝影機 AI"
+    description: "攝影機 AI 的總開關。開啟時，攝影機 AI 仍需在列印伺服器的「功能」頁面中開啟或關閉（預設關閉）。關閉後，它將永遠不會在此裝置上啟動。"
+  enable_live_webrtc:
+    name: "攝影機直連即時檢視"
+    description: "允許 LazyWait 應用程式直接從本裝置播放攝影機即時畫面（連接埠 18556 UDP/TCP 上的點對點 WebRTC）。LazyWait 雲端只協助雙方建立連線，影像從不經過雲端。預設開啟。關閉後將停止本機影像服務。"
+  enable_loss_prevention:
+    name: "防損"
+    description: "開啟防損代理程式（預設關閉）。它會監控在 ERP 中對應的 Home Assistant 實體（鐵捲門、門、門鎖、警報、燈光、移動偵測、錢箱），並將簽署後的結果傳送到 LazyWait 雲端。需要 Home Assistant 存取權杖。僅限 aarch64。"
+  ha_url:
+    name: "Home Assistant 網址"
+    description: "防損代理程式使用的 Home Assistant 位址。除非 Home Assistant 執行於其他主機，否則請留空（預設：http://127.0.0.1:8123）。"
+  ha_token:
+    name: "Home Assistant 存取權杖"
+    description: "Home Assistant 管理員使用者的長期存取權杖，供防損代理程式使用（個人資料 → 安全性 → 長期存取權杖）。"
+  isapi_username:
+    name: "攝影機 / NVR 使用者名稱"
+    description: "用於防損蒐證快照、NVR 播放與攝影機端人數統計的攝影機或 NVR 帳號（Hikvision ISAPI）。僅儲存在本裝置上。留空則只分析攝影機的子串流。"
+  isapi_password:
+    name: "攝影機 / NVR 密碼"
+    description: "上述攝影機 / NVR 帳號的密碼。僅儲存在本裝置上，絕不會傳送給 LazyWait。"
+  lp_agent_port:
+    name: "防損代理程式連接埠"
+    description: "防損代理程式的本機連接埠（測試模式與桌邊呼叫確認）。預設：8095。僅在本裝置上該連接埠已被占用時才需變更。"
+  admin_password:
+    name: "本機管理員密碼"
+    description: "在下次啟動時為列印伺服器的本機管理員帳號設定新密碼（至少 8 個字元），並登出所有管理員工作階段。留空則保留目前的密碼。請先更新本門市的所有收銀台：仍以預設密碼登入的舊版 POS 之後會改由裝置本身直接列印。"
