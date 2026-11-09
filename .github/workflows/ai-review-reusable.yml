@@ -124,7 +124,7 @@ jobs:
           DEFAULT_MAX_DIFF_CHARS: ${{ inputs.max_diff_chars }}
         run: |
           set -uo pipefail
-          review=true; reason=fallback
+          review=true; reason=fallback; admin_only=false
           model="$DEFAULT_MODEL"; min_score="$DEFAULT_MIN_SCORE"; max_diff="$DEFAULT_MAX_DIFF_CHARS"
           if [ -z "$POLICY_TOKEN" ]; then
             echo "::notice::LAZYWAIT_REVIEW_POLICY_TOKEN is not set — reviewing on this workflow's defaults (ERP GitHub settings not applied)."
@@ -140,14 +140,17 @@ jobs:
                 (.reason | type == "string" and test("^[a-z_]{1,40}$")) and
                 (.model | type == "string" and test("^[A-Za-z0-9._:-]{1,60}$")) and
                 (.minScore | type == "number" and . >= 0 and . <= 10) and
-                (.maxDiffChars | type == "number" and . >= 1000 and . <= 500000)
+                (.maxDiffChars | type == "number" and . >= 1000 and . <= 500000) and
+                ((.adminOnly // false) | type == "boolean")
               ' policy.json >/dev/null 2>&1; then
               review=$(jq -r '.review' policy.json)
               reason=$(jq -r '.reason' policy.json)
+              # Absent on an older API = false. Only meaningful for a skipped review.
+              [ "$review" = false ] && admin_only=$(jq -r '.adminOnly == true' policy.json)
               model=$(jq -r '.model' policy.json)
               min_score=$(jq -r '.minScore' policy.json)
               max_diff=$(jq -r '.maxDiffChars | floor' policy.json)
-              echo "policy: review=$review reason=$reason min_score=$min_score model=$model (updated $(jq -r '.updatedAt // "never"' policy.json))"
+              echo "policy: review=$review reason=$reason admin_only=$admin_only min_score=$min_score model=$model (updated $(jq -r '.updatedAt // "never"' policy.json))"
             else
               echo "::warning::Could not read the review policy (HTTP $code) — reviewing on this workflow's defaults. 401=token mismatch with GITHUB_AGENT_CI_TOKEN on the API; 503=not set on the API; 404=API not deployed yet or unknown repo; 000=network."
             fi
@@ -156,6 +159,7 @@ jobs:
           {
             echo "review=$review"
             echo "reason=$reason"
+            echo "admin_only=$admin_only"
             echo "model=$model"
             echo "min_score=$min_score"
             echo "max_diff_chars=$max_diff"
@@ -163,11 +167,13 @@ jobs:
 
       # A skipped review still PASSES this check (branch protection requires
       # `review / review`), and says why on the PR so nobody mistakes it for an
-      # approval.
+      # approval — unless the policy says "admins only while the reviewer is off",
+      # in which case the last step FAILS it and only a repo admin can merge.
       - name: Note the skipped review
         if: steps.policy.outputs.review == 'false'
         env:
           REASON: ${{ steps.policy.outputs.reason }}
+          ADMIN_ONLY: ${{ steps.policy.outputs.admin_only }}
           BASE_REF: ${{ github.event.pull_request.base.ref }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
         run: |
@@ -182,9 +188,17 @@ jobs:
           {
             echo '### 🤖 AI code review'
             echo
-            echo "**Skipped** — $why."
-            echo
-            echo '> Set in ERP → Deployment → GitHub settings. This is not an approval: nothing in this PR was reviewed.'
+            if [ "$ADMIN_ONLY" = true ]; then
+              echo "**Skipped — admins only.** $why, and while it is off only a repository admin may merge."
+              echo
+              echo 'This check fails on purpose so branch protection blocks everyone else. An admin merges with **Merge without waiting for requirements**.'
+              echo
+              echo '> Set in ERP → Deployment → GitHub settings ("Only admins can merge while the reviewer is off"). Nothing in this PR was reviewed.'
+            else
+              echo "**Skipped** — $why."
+              echo
+              echo '> Set in ERP → Deployment → GitHub settings. This is not an approval: nothing in this PR was reviewed.'
+            fi
           } > review.md
           echo "skipped: $REASON"
 
@@ -292,11 +306,14 @@ jobs:
           MIN_SCORE: ${{ steps.policy.outputs.min_score }}
           OUTCOME: ${{ steps.review.outcome }}
           REVIEWED: ${{ steps.policy.outputs.review }}
+          ADMIN_ONLY: ${{ steps.policy.outputs.admin_only }}
         run: |
           set -euo pipefail
           at_least() { awk -v a="$1" -v b="$2" 'BEGIN { exit !(a >= b) }'; }
           score="$(grep -oE '\*\*Score: [0-9]+(\.[0-9]+)?/10\*\*' review.md 2>/dev/null | head -n1 | grep -oE '[0-9]+(\.[0-9]+)?' | head -n1 || true)"
-          if [ "$REVIEWED" = 'false' ]; then
+          if [ "$REVIEWED" = 'false' ] && [ "$ADMIN_ONLY" = 'true' ]; then
+            name='review: admins only'; color='b60205'; desc='AI review is off; only a repository admin may merge (ERP GitHub settings).'
+          elif [ "$REVIEWED" = 'false' ]; then
             name='review: skipped'; color='bfd4f2'; desc='AI review skipped by the policy in ERP GitHub settings. Not an approval.'
           elif [ -z "$score" ]; then
             name='review: error'; color='6e7781'; desc='The AI review ended without a score. See the PR comment.'
@@ -324,4 +341,12 @@ jobs:
         if: steps.review.outcome == 'failure'
         run: |
           echo "::error::The AI review found blocking issues or scored below the minimum. See the PR comment."
+          exit 1
+
+      # The reviewer is off and the policy says only admins may merge then. A red
+      # required check is what branch protection lets only admins bypass.
+      - name: Admins only while the reviewer is off
+        if: steps.policy.outputs.admin_only == 'true'
+        run: |
+          echo "::error::AI review is switched off for this repository and only a repository admin may merge (ERP → Deployment → GitHub settings). An admin can merge with \"Merge without waiting for requirements\"."
           exit 1
